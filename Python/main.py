@@ -1,41 +1,61 @@
 import queries
+import utils
 
-try:
-    choice = input('''
-    1. fetch students
-    2. insert student
-    3. update student
-    4. delete student
-    Enter your choice: ''')
+while True:
+    try:
+        choice = input('''
+        1. fetch students
+        2. insert student
+        3. update student
+        4. delete student
+        5. exit
+        Enter your choice: ''')
 
-    if choice == "1":
-        queries.fetch_students()
+        if choice == "1":
+            rows = queries.fetch_students()
+            utils.display_students(rows)
+            
 
-    elif choice == "2":
-        name = input("enter the name: ")
-        country = input("enter the country: ")
-        age = int(input("enter the age: "))
+        elif choice == "2":
+            name = utils.get_non_empty_string("Enter the name: ")
+            country = utils.get_non_empty_string("Enter the country: ")
+            age = utils.get_valid_age()
+            rows = queries.insert_student(name,country,age)
+            utils.display_students(rows)
 
-        queries.insert_student(name,country,age)
+        elif choice == "3":
+            name = utils.get_non_empty_string("Enter the name: ")
+            country = utils.get_non_empty_string("Enter the country: ")
+            age = utils.get_valid_age()
+            id = utils.get_valid_id()
 
-    elif choice == "3":
-        name = input("enter the name: ")
-        country = input("enter the country: ")
-        age = int(input("enter the age: "))
-        id = int(input("enter the id: "))
+            if queries.student_exists(id):
+                rows = queries.update_student(name,country,age,id)
+                utils.display_students(rows)
 
-        queries.update_student(name,country,age,id)
+            else:
+                print("Student not found")
 
-    elif choice == "4":
-        id = int(input("enter the id: "))
+        elif choice == "4":
+            id = utils.get_valid_id()
 
-        queries.delete_student(id)
+            if queries.student_exists(id):
+                rows = queries.delete_student(id)
+                utils.display_students(rows)
 
-    else:
-        print("Enter a valid input")
+            else:
+                print("Student not found")
 
-except Exception as e:
-    print("Soemthing went wrong")
-    print(e)
+
+        elif choice == '5':
+            print("Closing EduFlow...")
+            break
+
+        else:
+            print("Enter a valid input")
+
+    except Exception as e:
+        print("Soemthing went wrong")
+        print(e)
 
 

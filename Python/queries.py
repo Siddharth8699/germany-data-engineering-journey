@@ -12,8 +12,7 @@ def fetch_students():
         cur.execute(query)
 
         rows = cur.fetchall()
-        for row in rows:
-            print(row)
+        return rows
 
     except Exception as e:
         print("Error while fetching students")
@@ -28,10 +27,6 @@ def fetch_students():
 
 
 
-    
-
-    
-
 def insert_student(name, country, age):
 
     conn = None
@@ -41,13 +36,19 @@ def insert_student(name, country, age):
         conn = get_connection()
         cur = conn.cursor()
         query = '''INSERT INTO students(name, country, age)
-                VALUES (%s, %s, %s)'''
+                VALUES (%s, %s, %s) returning *'''
         cur.execute(query, (name, country, age))
 
+        rows = cur.fetchall()
         conn.commit()
-        print("Student inserted successfully")
+        return rows
+    
 
     except Exception as e:
+
+        if conn:
+            conn.rollback()
+
         print("Error while inserting student")
         print(e)
 
@@ -58,9 +59,6 @@ def insert_student(name, country, age):
             conn.close()
 
         
-
-    
-
 
 def update_student(name, country, age, id):
 
@@ -74,13 +72,18 @@ def update_student(name, country, age, id):
                 set name = %s,
                 country = %s,
                 age = %s
-                where id = %s'''
+                where id = %s returning *'''
         cur.execute(query,(name, country, age, id))
 
+        rows = cur.fetchall()
         conn.commit()
-        print("Student updated successfully")
+        return rows
 
     except Exception as e:
+
+        if conn:
+            conn.rollback()
+
         print("Error while updating student")
         print(e)
 
@@ -89,7 +92,6 @@ def update_student(name, country, age, id):
             cur.close()
         if conn:
             conn.close()
-
 
 
 
@@ -102,13 +104,18 @@ def delete_student(id):
         conn = get_connection()
         cur = conn.cursor()
         query = '''delete from students
-                    where id = %s'''
+                    where id = %s returning *'''
         cur.execute(query,(id,))
-
+        
+        rows = cur.fetchall()
         conn.commit()
-        print("Student deleted successfully")
+        return rows
 
     except Exception as e:
+
+        if conn:
+            conn.rollback()
+
         print("Error while deleting student")
         print(e)
 
@@ -118,3 +125,34 @@ def delete_student(id):
         if conn:
             conn.close()
 
+
+def student_exists(id):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from students where id = %s"
+        cur.execute(query,(id,))
+        student = cur.fetchone()
+
+        if student is None:
+            return False
+        
+        else:
+            return True
+        
+    except Exception as e:
+        print("Error while checking student existence")
+        print(e)
+
+        return False
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
