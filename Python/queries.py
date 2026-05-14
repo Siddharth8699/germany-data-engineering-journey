@@ -8,7 +8,7 @@ def fetch_students():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = "SELECT * FROM students"
+        query = "SELECT * FROM students order by id"
         cur.execute(query)
 
         rows = cur.fetchall()
@@ -60,7 +60,7 @@ def insert_student(name, country, age):
 
         
 
-def update_student(name, country, age, id):
+def update_student(name, country, age, student_id):
 
     conn = None
     cur = None
@@ -73,7 +73,7 @@ def update_student(name, country, age, id):
                 country = %s,
                 age = %s
                 where id = %s returning *'''
-        cur.execute(query,(name, country, age, id))
+        cur.execute(query,(name, country, age, student_id))
 
         rows = cur.fetchall()
         conn.commit()
@@ -95,7 +95,7 @@ def update_student(name, country, age, id):
 
 
 
-def delete_student(id):
+def delete_student(student_id):
 
     conn = None
     cur = None
@@ -105,7 +105,7 @@ def delete_student(id):
         cur = conn.cursor()
         query = '''delete from students
                     where id = %s returning *'''
-        cur.execute(query,(id,))
+        cur.execute(query,(student_id,))
         
         rows = cur.fetchall()
         conn.commit()
@@ -126,7 +126,7 @@ def delete_student(id):
             conn.close()
 
 
-def student_exists(id):
+def student_exists(student_id):
 
     conn = None
     cur = None
@@ -136,7 +136,7 @@ def student_exists(id):
         conn = get_connection()
         cur = conn.cursor()
         query = "select * from students where id = %s"
-        cur.execute(query,(id,))
+        cur.execute(query,(student_id,))
         student = cur.fetchone()
 
         if student is None:

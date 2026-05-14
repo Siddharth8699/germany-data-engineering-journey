@@ -13,7 +13,11 @@ while True:
 
         if choice == "1":
             rows = queries.fetch_students()
-            utils.display_students(rows)
+            if rows:
+                utils.display_students(rows)
+
+            else:
+                print("No students found")
             
 
         elif choice == "2":
@@ -24,13 +28,14 @@ while True:
             utils.display_students(rows)
 
         elif choice == "3":
-            name = utils.get_non_empty_string("Enter the name: ")
-            country = utils.get_non_empty_string("Enter the country: ")
-            age = utils.get_valid_age()
-            id = utils.get_valid_id()
+            student_id = utils.get_valid_id()
 
-            if queries.student_exists(id):
-                rows = queries.update_student(name,country,age,id)
+            if queries.student_exists(student_id):
+                name = utils.get_non_empty_string("Enter the name: ")
+                country = utils.get_non_empty_string("Enter the country: ")
+                age = utils.get_valid_age()
+
+                rows = queries.update_student(name,country,age,student_id)
                 utils.display_students(rows)
 
             else:
@@ -39,8 +44,8 @@ while True:
         elif choice == "4":
             id = utils.get_valid_id()
 
-            if queries.student_exists(id):
-                rows = queries.delete_student(id)
+            if queries.student_exists(student_id):
+                rows = queries.delete_student(student_id)
                 utils.display_students(rows)
 
             else:
@@ -55,7 +60,7 @@ while True:
             print("Enter a valid input")
 
     except Exception as e:
-        print("Soemthing went wrong")
+        print("Something went wrong")
         print(e)
 
 

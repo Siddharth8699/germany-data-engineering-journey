@@ -20,13 +20,13 @@ def get_valid_id():
     while True:
 
         try:
-            id = int(input("Enter the id: "))
+            student_id = int(input("Enter the id: "))
 
-            if id <= 0:
+            if student_id <= 0:
                 print("id should be greater than 0")
             
             else:
-                return id
+                return student_id
             
         except ValueError:
             print("Please enter numbers only")
