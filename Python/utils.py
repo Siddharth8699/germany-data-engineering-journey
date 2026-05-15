@@ -1,3 +1,5 @@
+from datetime import datetime, date
+
 STUDENT_HEADERS = ["ID", "Name", "Country", "Age"]
 
 COMPANY_HEADERS = ["ID", "Company", "Country", "Industry"]
@@ -13,12 +15,12 @@ APPLICATION_HEADERS = [
 ]
 
 
-def get_valid_age():
+def get_valid_age(message="Enter the Age: "):
 
     while True:
 
         try:
-            age = int(input("Enter the age: "))
+            age = int(input(message))
 
             if age <= 0:
                 print("Age must be greater than 0")
@@ -31,12 +33,12 @@ def get_valid_age():
 
 
 
-def get_valid_salary():
+def get_valid_salary(message="Enter the Salary: "):
 
     while True:
 
         try:
-            salary = int(input("Enter the salary: "))
+            salary = int(input(message))
 
             if salary <= 0:
                 print("Salary must be greater than 0")
@@ -48,19 +50,19 @@ def get_valid_salary():
             print("Please enter a valid salary")
 
 
-def get_valid_id():
+def get_valid_id(message="Enter the ID: "):
 
     while True:
 
         try:
-            student_id = int(input("Enter the id: "))
+            student_id = int(input(message))
 
             if student_id <= 0:
-                print("id should be greater than 0")
-            
+                print("ID should be greater than 0")
+
             else:
                 return student_id
-            
+
         except ValueError:
             print("Please enter numbers only")
 
@@ -95,5 +97,28 @@ def display_data(headers, rows):
 
     for row in rows:
         for value in row:
-            print(f"{value:<20}", end=" ")
+            print(f"{str(value):<20}", end=" ")
         print()
+
+
+def get_valid_date(message="Enter the date (YYYY-MM-DD): "):
+
+    while True:
+
+        try:
+
+            date_input = input(message)
+
+            valid_date = datetime.strptime(
+                date_input,
+                "%Y-%m-%d"
+            ).date()
+
+            if valid_date > date.today():
+                print("Date cannot be in the future")
+
+            else:
+                return valid_date
+
+        except ValueError:
+            print("Invalid date format. Use YYYY-MM-DD")

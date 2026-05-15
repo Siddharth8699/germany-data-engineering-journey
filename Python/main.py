@@ -115,8 +115,8 @@ while True:
 
 
                 elif choice == "8":
-                    age1 = utils.get_valid_age()
-                    age2 = utils.get_valid_age()
+                    age1 = utils.get_valid_age("Enter the age1: ")
+                    age2 = utils.get_valid_age("Enter the age2: ")
                     rows = queries.students_between_age1_and_age2(age1,age2)
 
                     if rows:
@@ -367,9 +367,9 @@ while True:
                 
                 elif choice == "3":
                     #fix id and id when running. run again later.
-                    job_id = utils.get_valid_id()
+                    job_id = utils.get_valid_id("Enter the job_id: ")
                     if queries.job_exists(job_id):
-                        company_id = utils.get_valid_id()
+                        company_id = utils.get_valid_id("Enter the company_id: ")
 
                         if queries.company_exists(company_id):
                             title = utils.get_non_empty_string("Enter the title: ")
@@ -423,9 +423,8 @@ while True:
 
 
                 elif choice == "8":
-                    #salary1 nd salary2 both ask enter the salary
-                    salary1 = utils.get_valid_salary()
-                    salary2 = utils.get_valid_salary()
+                    salary1 = utils.get_valid_salary("Enter the salary1: ")
+                    salary2 = utils.get_valid_salary("Enter the salary2: ")
                     rows = queries.jobs_between_salary1_and_salary2(salary1,salary2)
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
@@ -487,13 +486,13 @@ while True:
                     else:
                         print("Job not found")
 
+                
+                elif choice == "16":
+                    break
 
+                else:
+                    print("Enter a valid input")
 
-
-
-
-                    
-                    
 
 
         elif choice == "4":
@@ -519,6 +518,128 @@ while True:
                 12. Back
 
                 Enter your choice: ''')
+
+                if choice == "1":
+                    rows = queries.fetch_applications()
+                    if rows:
+                        utils.display_data(utils.APPLICATION_HEADERS, rows)
+                    else:
+                        print("Application not found")
+
+                elif choice == "2":
+                    rows = queries.fetch_student_ids_and_names()
+                    utils.display_data(["ID", "Name"], rows)
+
+                    while True:
+                        student_id = utils.get_valid_id("Enter the student id: ")
+                        if queries.student_exists(student_id):
+                            break
+
+                        print("Student not found")
+
+                    rows = queries.fetch_jobs_ids_and_names()
+                    utils.display_data(["ID", "title"], rows)
+
+                    while True:
+                        job_id = utils.get_valid_id("Enter the job id: ")
+                        if queries.job_exists(job_id):
+                            break
+
+                        print("Job not found")
+
+                    application_date = utils.get_valid_date()
+                    status = utils.get_non_empty_string("Enter the status: ")
+                    rows = queries.insert_applications(student_id, job_id, application_date, status)
+                    utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                elif choice == "3":
+                    while True:
+                        application_id = utils.get_valid_id("Enter application id: ")
+                        if queries.application_exists(application_id):
+                            break
+
+                        print("Application not found")
+
+                    application_date = utils.get_valid_date()
+                    status =  utils.get_non_empty_string("Enter the status: ")
+                    rows = queries.update_applications(application_date, status, application_id)
+                    utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                elif choice == "4":
+                    while True:
+                        application_id = utils.get_valid_id("Enter application id: ")
+                        if queries.application_exists(application_id):
+                            break
+
+                        print("Application not found")
+
+                    rows = queries.delete_application(application_id)
+                    utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+
+                elif choice == "5":
+                    status = utils.get_non_empty_string("Enter the status: ")
+                    rows = queries.search_applications_by_status(status)
+                    if rows:
+                        utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                    else:
+                        print("Application not found")
+
+
+                elif choice == "6":
+                    student_id = utils.get_valid_id("Enter the student id: ")
+                    if queries.student_exists(student_id):
+                        rows = queries.search_applications_by_student_id(student_id)
+                        if rows:
+                            utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                        else:
+                            print("Application not found")
+
+
+                elif choice == "7":
+                    job_id = utils.get_valid_id("Enter the job id: ")
+                    if queries.job_exists(job_id):
+                        rows = queries.search_applications_by_job_id(job_id)
+                        if rows:
+                            utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                        else:
+                            print("Application not found")
+
+
+                elif choice == "8":
+                    rows = queries.sort_applications_by_date()
+                    utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+
+                elif choice == "9":
+                    rows = queries.sort_applications_by_status()
+                    utils.display_data(utils.APPLICATION_HEADERS, rows)
+
+                elif choice == "10":
+                    rows = queries.total_applications()
+                    print(rows)
+
+
+                elif choice == "11":
+                    rows = queries.applications_by_status()
+                    if rows:
+                        utils.display_data(['Status','number_of_applications'], rows)
+
+                    else:
+                        print("Application not found")
+
+                    
+                elif choice == "12":
+                    break
+
+
+                else:
+                    print("Enter a valid input")
+
+
 
 
         elif choice == "5":
@@ -571,6 +692,7 @@ while True:
                         26. Back
 
                         Enter your choice: ''')
+                
                 
 
         elif choice == "6":

@@ -1361,3 +1361,422 @@ def lowest_paying_job():
             cur.close()
         if conn:
             conn.close()
+
+
+    
+# =========================
+# Applications QUERIES
+# =========================
+
+
+def fetch_applications():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "SELECT * FROM applications order by id"
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        return rows
+
+    except Exception as e:
+        print("Error while fetching jobs")
+        print(e)
+
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def insert_applications(student_id, job_id, application_date, status):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''INSERT INTO applications(student_id, job_id, application_date, status)
+                VALUES (%s, %s, %s, %s) returning *'''
+        cur.execute(query, (student_id, job_id, application_date, status))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while inserting companies")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def fetch_student_ids_and_names():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''select id, name from students order by id'''
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while fetching students id and name")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def fetch_jobs_ids_and_names():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''select id, title from jobs order by id'''
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while fetching jobs id and name")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def update_applications(application_date, status, application_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''update applications
+                set application_date = %s,
+                status = %s
+                where id = %s returning *'''
+        cur.execute(query,(application_date, status, application_id))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while updating applications")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def application_exists(application_id):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications where id = %s"
+        cur.execute(query,(application_id,))
+        student = cur.fetchone()
+
+        if student is None:
+            return False
+        
+        else:
+            return True
+        
+    except Exception as e:
+        print("Error while checking company existence")
+        print(e)
+
+        return False
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def delete_application(application_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''delete from applications
+                    where id = %s returning *'''
+        cur.execute(query,(application_id,))
+        
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while deleting applications")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def search_applications_by_status(status):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications where status ILIKE %s order by id"
+        search_name = f"%{status}%"
+        cur.execute(query,(search_name,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching applications by status")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def search_applications_by_student_id(student_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications where student_id = '%s' order by id"
+        cur.execute(query,(student_id,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching applications by student id")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def search_applications_by_job_id(job_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications where job_id = '%s' order by id"
+        cur.execute(query,(job_id,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching applications by job id")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def sort_applications_by_date():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications order by application_date asc"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting applications by application_date")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def sort_applications_by_status():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from applications order by status asc"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting applications by status")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def total_applications():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select count(*) from applications"
+        cur.execute(query)
+        rows = cur.fetchone()
+        return rows[0]
+    
+    except Exception as e:
+        print("Error while calculating total applications")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+
+def applications_by_status():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select status, count(*) as number_of_applications from applications group by status order by status"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while calculating total applications by status")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
