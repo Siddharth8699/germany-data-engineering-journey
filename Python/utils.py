@@ -1,3 +1,18 @@
+STUDENT_HEADERS = ["ID", "Name", "Country", "Age"]
+
+COMPANY_HEADERS = ["ID", "Company", "Country", "Industry"]
+
+JOB_HEADERS = ["ID", "Title", "Salary", "Location", "Company ID"]
+
+APPLICATION_HEADERS = [
+    "ID",
+    "Student ID",
+    "Job ID",
+    "Application Date",
+    "Status"
+]
+
+
 def get_valid_age():
 
     while True:
@@ -13,6 +28,24 @@ def get_valid_age():
             
         except ValueError:
             print("Please enter numbers only")
+
+
+
+def get_valid_salary():
+
+    while True:
+
+        try:
+            salary = int(input("Enter the salary: "))
+
+            if salary <= 0:
+                print("Salary must be greater than 0")
+
+            else:
+                return salary
+            
+        except ValueError:
+            print("Please enter a valid salary")
 
 
 def get_valid_id():
@@ -44,18 +77,23 @@ def get_non_empty_string(prompt):
         else:
             cleaned = s.replace(" ","")
             if cleaned.isalpha():
-                return s.strip()
+                return s.strip().title()
             else:
                 print("Please enter alphabets and spaces only")
             
         
-def display_students(rows):
+
+def display_data(headers, rows):
 
     print()
 
-    print(f"{'ID':<10}{'NAME':<20}{'COUNTRY':<20}{'AGE':<10}")
+    for header in headers:
+        print(f"{header:<20}", end=" ")
 
-    print("-" * 60)
+    print()
+    print("-" * (len(headers) * 20))
 
     for row in rows:
-        print(f"{row[0]:<10}{row[1]:<20}{row[2]:<20}{row[3]:<10}")
+        for value in row:
+            print(f"{value:<20}", end=" ")
+        print()

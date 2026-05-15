@@ -1,5 +1,11 @@
 from db_connect import get_connection
 
+
+# =========================
+# STUDENT QUERIES
+# =========================
+
+
 def fetch_students():
 
     conn = None
@@ -167,8 +173,9 @@ def search_students_by_country(country):
 
         conn = get_connection()
         cur = conn.cursor()
-        query = "select * from students where country = %s order by id"
-        cur.execute(query, (country,))
+        query = "select * from students where country ILIKE %s order by id"
+        search_name = f"%{country}%"
+        cur.execute(query,(search_name,))
         rows = cur.fetchall()
         return rows
     
@@ -506,13 +513,845 @@ def average_age_per_country():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = "select country, round(avg(age),2) from students group by country"
+        query = "select country, round(avg(age), 2) AS average_age from students group by country"
         cur.execute(query)
         rows = cur.fetchall()
         return rows
     
     except Exception as e:
         print("Error while calculating average age of students per country")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# =========================
+# COMPANY QUERIES
+# =========================
+
+
+def fetch_companies():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "SELECT * FROM companies order by id"
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        return rows
+
+    except Exception as e:
+        print("Error while fetching companies")
+        print(e)
+
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def insert_company(company_name, country, industry):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''INSERT INTO companies(company_name, country, industry)
+                VALUES (%s, %s, %s) returning *'''
+        cur.execute(query, (company_name, country, industry))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while inserting companies")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def update_companies(company_name, country, industry, company_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''update companies
+                set company_name = %s,
+                country = %s,
+                industry = %s
+                where id = %s returning *'''
+        cur.execute(query,(company_name, country, industry, company_id))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while updating companies")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def company_exists(company_id):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies where id = %s"
+        cur.execute(query,(company_id,))
+        student = cur.fetchone()
+
+        if student is None:
+            return False
+        
+        else:
+            return True
+        
+    except Exception as e:
+        print("Error while checking company existence")
+        print(e)
+
+        return False
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def delete_company(company_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''delete from companies
+                    where id = %s returning *'''
+        cur.execute(query,(company_id,))
+        
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while deleting companies")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_companies_by_name(company_name):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies where company_name ILIKE %s order by id"
+        search_name = f"%{company_name}%"
+        cur.execute(query,(search_name,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching companies by name")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_companies_by_country(country):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies where country ILIKE %s order by id"
+        search_country = f"%{country}%"
+        cur.execute(query,(search_country,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching companies by country")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_companies_by_industry(industry):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies where industry ILIKE %s order by id"
+        search_industry = f"%{industry}%"
+        cur.execute(query,(search_industry,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching companies by industry")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def sort_companies_by_company_name():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies order by company_name"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting companies by name")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def total_companies():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select count(*) from companies"
+        cur.execute(query)
+        rows = cur.fetchone()
+        return rows[0]
+    
+    except Exception as e:
+        print("Error while calculating companies")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def companies_per_country():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select country, count(*) from companies group by country"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while calculating companies per country")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+def companies_per_industry():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select industry, count(*) from companies group by industry"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while calculating companies per industry")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# =========================
+# JOBS QUERIES
+# =========================
+
+def fetch_jobs():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "SELECT * FROM jobs order by id"
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        return rows
+
+    except Exception as e:
+        print("Error while fetching jobs")
+        print(e)
+
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def insert_job(title, salary, location, company_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''INSERT INTO jobs(title, salary, location, company_id)
+                VALUES (%s, %s, %s, %s) returning *'''
+        cur.execute(query, (title, salary, location, company_id))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while inserting companies")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def fetch_company_ids_and_names():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''select id, company_name from companies order by id'''
+        cur.execute(query)
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while fetching companies id and name")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def job_exists(job_id):
+
+    conn = None
+    cur = None
+
+    try:
+
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs where id = %s"
+        cur.execute(query,(job_id,))
+        student = cur.fetchone()
+
+        if student is None:
+            return False
+        
+        else:
+            return True
+        
+    except Exception as e:
+        print("Error while checking company existence")
+        print(e)
+
+        return False
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def update_jobs(title, salary, location, company_id, job_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''update jobs
+                set title = %s,
+                salary = %s,
+                location = %s,
+                company_id = %s
+                where id = %s returning *'''
+        cur.execute(query,(title, salary, location, company_id, job_id))
+
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while updating jobs")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def delete_job(job_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = '''delete from jobs
+                    where id = %s returning *'''
+        cur.execute(query,(job_id,))
+        
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Error while deleting jobs")
+        print(e)
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_jobs_by_title(title):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs where title ILIKE %s order by id"
+        search_name = f"%{title}%"
+        cur.execute(query,(search_name,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching companies by name")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_jobs_by_location(location):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs where location ILIKE %s order by id"
+        search_name = f"%{location}%"
+        cur.execute(query,(search_name,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching companies by name")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def jobs_with_salary_above(salary):
+
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs where salary > %s order by salary"
+        cur.execute(query,(salary,))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching jobs with salaray above")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def jobs_between_salary1_and_salary2(salary1,salary2):
+
+    conn = None
+    cur = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs where salary between %s and %s order by salary"
+        cur.execute(query,(salary1, salary2))
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while searching salary in between")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def sort_jobs_by_salary_increasing():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs order by salary asc"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting jobs by salary increasingly")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def sort_jobs_by_salary_decreasing():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs order by salary desc"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting jobs by salary decreasingly")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def sort_jobs_by_title():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs order by title"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while sorting jobs by title")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def total_jobs():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select count(*) from jobs"
+        cur.execute(query)
+        rows = cur.fetchone()
+        return rows[0]
+    
+    except Exception as e:
+        print("Error while calculating total jobs")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def average_salary_jobs():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select round(avg(salary), 2) from jobs"
+        cur.execute(query)
+        rows = cur.fetchone()
+        return rows[0]
+    
+    except Exception as e:
+        print("Error while calculating average salary job")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def highest_paying_job():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs order by salary desc limit 1"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while calculating highest salary job")
+        print(e)
+
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def lowest_paying_job():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from jobs order by salary asc limit 1"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except Exception as e:
+        print("Error while calculating lowest salary job")
         print(e)
 
 
