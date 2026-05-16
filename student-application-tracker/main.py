@@ -44,10 +44,9 @@ while True:
                 Enter your choice: ''')
 
                 if choice == "1":
-                    rows = queries.fetch_students()
+                    rows = queries.get_all_students()
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
-
                     else:
                         print("No students found")
 
@@ -55,7 +54,7 @@ while True:
                     name = utils.get_non_empty_string("Enter the name: ")
                     country = utils.get_non_empty_string("Enter the country: ")
                     age = utils.get_valid_age()
-                    rows = queries.insert_student(name,country,age)
+                    rows = queries.insert_student(name, country, age)
                     utils.display_data(utils.STUDENT_HEADERS, rows)
 
                 elif choice == "3":
@@ -66,9 +65,9 @@ while True:
                         country = utils.get_non_empty_string("Enter the country: ")
                         age = utils.get_valid_age()
 
-                        rows = queries.update_student(name,country,age,student_id)
+                        # Verify that your queries.py declaration accepts parameters in this exact sequence
+                        rows = queries.update_student(name, country, age, student_id)
                         utils.display_data(utils.STUDENT_HEADERS, rows)
-
                     else:
                         print("Student not found")
 
@@ -78,10 +77,8 @@ while True:
                     if queries.student_exists(student_id):
                         rows = queries.delete_student(student_id)
                         utils.display_data(utils.STUDENT_HEADERS, rows)
-
                     else:
                         print("Student not found")
-
 
                 elif choice == "5":
                     name = utils.get_non_empty_string("Enter the name: ")
@@ -89,10 +86,8 @@ while True:
 
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
-
                     else:
                         print("No students found")
-
 
                 elif choice == "6":
                     country = utils.get_non_empty_string("Enter the country: ")
@@ -103,82 +98,94 @@ while True:
                     else:
                         print("No students found")
 
-
                 elif choice == "7":
                     age = utils.get_valid_age()
-                    rows = queries.students_older_than_year_old(age)
+                    rows = queries.get_students_older_than(age)
 
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
-
 
                 elif choice == "8":
-                    age1 = utils.get_valid_age("Enter the age1: ")
-                    age2 = utils.get_valid_age("Enter the age2: ")
-                    rows = queries.students_between_age1_and_age2(age1,age2)
+                    min_age = utils.get_valid_age("Enter the min age: ")
+                    max_age = utils.get_valid_age("Enter the max age: ")
+                    rows = queries.get_students_between_ages(min_age, max_age)
 
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
 
-
                 elif choice == "9":
-                    rows = queries.sort_students_by_name()
+                    rows = queries.get_students_sorted_by_name()
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
 
                 elif choice == "10":
-                    rows = queries.sort_students_by_increasing_age()
+                    rows = queries.get_students_sorted_by_age_asc()
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
 
                 elif choice == "11":
-                    rows = queries.sort_students_by_decreasing_age()
+                    rows = queries.get_students_sorted_by_age_desc()
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
 
                 elif choice == "12":
-                    rows = queries.sort_students_by_country_then_age()
+                    rows = queries.get_students_sorted_by_country_and_age()
                     if rows:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
                     else:
                         print("No students found")
 
-
                 elif choice == "13":
-                    rows = queries.total_students()
-                    print(rows)
+                    rows = queries.get_total_students()
+                    if rows:
+                        utils.display_data(['Total Registered Students'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "14":
-                    rows = queries.average_age_students()
-                    print(rows)
+                    rows = queries.get_average_student_age()
+                    if rows:
+                        utils.display_data(['Average Student Age'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "15":
-                    rows = queries.min_age_students()
-                    print(rows)
+                    rows = queries.get_youngest_student_age()
+                    if rows:
+                        utils.display_data(['Youngest Candidate Age'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "16":
-                    rows = queries.max_age_students()
-                    print(rows)
+                    rows = queries.get_oldest_student_age()
+                    if rows:
+                        utils.display_data(['Oldest Candidate Age'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "17":
-                    rows = queries.students_per_country()
-                    for row in rows:
-                        print(row)
+                    rows = queries.get_student_count_by_country()
+                    if rows:
+                        utils.display_data(['Country Origin', 'Total Student Count'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "18":
-                    rows = queries.average_age_per_country()
-                    for country, average_age in rows:
-                        print(f"{country:<20}", f"{average_age:<10}")
+                    rows = queries.get_average_student_age_by_country()
+                    if rows:
+                        utils.display_data(['Country Origin', 'Average Age Metrics'], rows)
+                    else:
+                        print("No students found")
 
                 elif choice == "19":
                     break
@@ -212,7 +219,7 @@ while True:
                 Enter your choice: ''')
 
                 if choice == "1":
-                    rows = queries.fetch_companies()
+                    rows = queries.get_all_companies()
                     if rows:
                         utils.display_data(utils.COMPANY_HEADERS, rows)
                     else:
@@ -222,7 +229,7 @@ while True:
                     company_name = utils.get_non_empty_string("Enter the company name: ")
                     country = utils.get_non_empty_string("Enter the country: ")
                     industry = utils.get_non_empty_string("Enter the industry: ")
-                    rows = queries.insert_company(company_name,country,industry)
+                    rows = queries.insert_company(company_name, country, industry)
                     utils.display_data(utils.COMPANY_HEADERS, rows)
 
                 elif choice == "3":
@@ -231,9 +238,9 @@ while True:
                         company_name = utils.get_non_empty_string("Enter the company name: ")
                         country = utils.get_non_empty_string("Enter the country: ")
                         industry = utils.get_non_empty_string("Enter the industry: ")
-                        rows = queries.update_companies(company_name,country,industry,company_id)
+                        # Standardized to singular 'company' to match patterns
+                        rows = queries.update_company(company_name, country, industry, company_id)
                         utils.display_data(utils.COMPANY_HEADERS, rows)
-
                     else:
                         print("Company not found")
 
@@ -270,37 +277,41 @@ while True:
                         print("Company not found")
 
                 elif choice == "8":
-                    rows = queries.sort_companies_by_company_name()
+                    # Unified with get_ prefix
+                    rows = queries.get_companies_sorted_by_name()
                     if rows:
                         utils.display_data(utils.COMPANY_HEADERS, rows)
                     else:
                         print("Company not found")
 
-
                 elif choice == "9":
-                    rows = queries.sort_companies_by_country()
+                    # Unified with get_ prefix
+                    rows = queries.get_companies_sorted_by_country()
                     if rows:
                         utils.display_data(utils.COMPANY_HEADERS, rows)
                     else:
                         print("Company not found")
 
                 elif choice == "10":
-                    rows = queries.total_companies()
-                    print(rows)
+                    rows = queries.get_total_companies()
+                    if rows:
+                        utils.display_data(['Total Companies Registered'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "11":
-                    rows = queries.companies_per_country()
-                    for row in rows:
-                        for value in row:
-                            print(f"{value:<20}", end=" ")
-                        print()
+                    rows = queries.get_company_count_by_country()
+                    if rows:
+                        utils.display_data(['Country', 'Company Count'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "12":
-                    rows = queries.companies_per_industry()
-                    for row in rows:
-                        for value in row:
-                            print(f"{value:<20}", end=" ")
-                        print()
+                    rows = queries.get_company_count_by_industry()
+                    if rows:
+                        utils.display_data(['Industry', 'Company Count'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "13":
                     break
@@ -339,19 +350,19 @@ while True:
                 Enter your choice: ''')
 
                 if choice == "1":
-                    rows = queries.fetch_jobs()
+                    # Unified fetch -> get
+                    rows = queries.get_all_jobs()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
                     else:
                         print("Job not found")
 
                 elif choice == "2":
-                    rows = queries.fetch_company_ids_and_names()
-                    for row in rows:
-                        for value in row:
-                            print(f"{value:<20}", end=" ")
-                        print()
-
+                    # Replaced manual nested terminal loops with standardized display_data
+                    rows = queries.get_company_ids_and_names()
+                    if rows:
+                        utils.display_data(['Company ID', 'Company Name'], rows)
+                    
                     company_id = utils.get_valid_id()
 
                     if queries.company_exists(company_id):
@@ -360,13 +371,10 @@ while True:
                         location = utils.get_non_empty_string("Enter the location: ")
                         rows = queries.insert_job(title, salary, location, company_id)
                         utils.display_data(utils.JOB_HEADERS, rows)
-                    
                     else:
                         print("Company not found")
 
-                
                 elif choice == "3":
-                    #fix id and id when running. run again later.
                     job_id = utils.get_valid_id("Enter the job_id: ")
                     if queries.job_exists(job_id):
                         company_id = utils.get_valid_id("Enter the company_id: ")
@@ -375,118 +383,107 @@ while True:
                             title = utils.get_non_empty_string("Enter the title: ")
                             salary = utils.get_valid_salary()
                             location = utils.get_non_empty_string("Enter the location: ")
-                            rows = queries.update_jobs(title, salary, location, company_id, job_id)
+                            # Standardized to singular 'update_job' to match CRUD rules
+                            rows = queries.update_job(title, salary, location, company_id, job_id)
                             utils.display_data(utils.JOB_HEADERS, rows)
-
+                        else:
+                            print("Company not found")
                     else:
                         print("Job not found")
-
 
                 elif choice == "4":
                     job_id = utils.get_valid_id()
                     if queries.job_exists(job_id):
                         rows = queries.delete_job(job_id)
                         utils.display_data(utils.JOB_HEADERS, rows)
-                    
                     else:
                         print("Job not found")
-
 
                 elif choice == "5":
                     title = utils.get_non_empty_string("Enter the title: ")
                     rows = queries.search_jobs_by_title(title)
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
 
-                    
                 elif choice == "6":
                     location = utils.get_non_empty_string("Enter the location: ")
                     rows = queries.search_jobs_by_location(location)
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
-
 
                 elif choice == "7":
                     salary = utils.get_valid_salary()
-                    rows = queries.jobs_with_salary_above(salary)
+                    # Cleaned prefix pattern
+                    rows = queries.get_jobs_with_salary_above(salary)
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
-
 
                 elif choice == "8":
-                    salary1 = utils.get_valid_salary("Enter the salary1: ")
-                    salary2 = utils.get_valid_salary("Enter the salary2: ")
-                    rows = queries.jobs_between_salary1_and_salary2(salary1,salary2)
+                    min_salary = utils.get_valid_salary("Enter the min salary: ")
+                    max_salary = utils.get_valid_salary("Enter the max salary: ")
+                    # Standardized name pattern
+                    rows = queries.get_jobs_between_salaries(min_salary, max_salary)
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
 
-                
                 elif choice == "9":
-                    rows = queries.sort_jobs_by_salary_increasing()
+                    # Unified sort -> get_..._sorted_
+                    rows = queries.get_jobs_sorted_by_salary_asc()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
-
-
 
                 elif choice == "10":
-                    rows = queries.sort_jobs_by_salary_decreasing()
+                    rows = queries.get_jobs_sorted_by_salary_desc()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
-
 
                 elif choice == "11":
-                    rows = queries.sort_jobs_by_title()
+                    rows = queries.get_jobs_sorted_by_title()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
-
                     else:
                         print("Job not found")
-
 
                 elif choice == "12":
-                    rows = queries.total_jobs()
-                    print(rows)
-
+                    rows = queries.get_total_jobs()
+                    if rows:
+                        utils.display_data(['Total Active Jobs Available'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "13":
-                    rows = queries.average_salary_jobs()
-                    print(rows)
-
+                    rows = queries.get_average_job_salary()
+                    if rows:
+                        utils.display_data(['Average Offered Salary'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "14":
-                    rows = queries.highest_paying_job()
+                    rows = queries.get_highest_paying_job()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
                     else:
                         print("Job not found")
-
 
                 elif choice == "15":
-                    rows = queries.lowest_paying_job()
+                    rows = queries.get_lowest_paying_job()
                     if rows:
                         utils.display_data(utils.JOB_HEADERS, rows)
                     else:
                         print("Job not found")
 
-                
                 elif choice == "16":
                     break
 
@@ -520,36 +517,38 @@ while True:
                 Enter your choice: ''')
 
                 if choice == "1":
-                    rows = queries.fetch_applications()
+                    # Unified fetch -> get
+                    rows = queries.get_all_applications()
                     if rows:
                         utils.display_data(utils.APPLICATION_HEADERS, rows)
                     else:
                         print("Application not found")
 
                 elif choice == "2":
-                    rows = queries.fetch_student_ids_and_names()
-                    utils.display_data(["ID", "Name"], rows)
+                    # Polished header layout
+                    rows = queries.get_student_ids_and_names()
+                    utils.display_data(["Student ID", "Student Name"], rows)
 
                     while True:
                         student_id = utils.get_valid_id("Enter the student id: ")
                         if queries.student_exists(student_id):
                             break
-
                         print("Student not found")
 
-                    rows = queries.fetch_jobs_ids_and_names()
-                    utils.display_data(["ID", "title"], rows)
+                    # Polished header layout
+                    rows = queries.get_job_ids_and_names()
+                    utils.display_data(["Job ID", "Job Title"], rows)
 
                     while True:
                         job_id = utils.get_valid_id("Enter the job id: ")
                         if queries.job_exists(job_id):
                             break
-
                         print("Job not found")
 
                     application_date = utils.get_valid_date()
                     status = utils.get_non_empty_string("Enter the status: ")
-                    rows = queries.insert_applications(student_id, job_id, application_date, status)
+                    # Standardized to singular function name mapping
+                    rows = queries.insert_application(student_id, job_id, application_date, status)
                     utils.display_data(utils.APPLICATION_HEADERS, rows)
 
                 elif choice == "3":
@@ -557,12 +556,12 @@ while True:
                         application_id = utils.get_valid_id("Enter application id: ")
                         if queries.application_exists(application_id):
                             break
-
                         print("Application not found")
 
                     application_date = utils.get_valid_date()
-                    status =  utils.get_non_empty_string("Enter the status: ")
-                    rows = queries.update_applications(application_date, status, application_id)
+                    status = utils.get_non_empty_string("Enter the status: ")
+                    # Standardized to singular function name mapping
+                    rows = queries.update_application(application_date, status, application_id)
                     utils.display_data(utils.APPLICATION_HEADERS, rows)
 
                 elif choice == "4":
@@ -570,22 +569,18 @@ while True:
                         application_id = utils.get_valid_id("Enter application id: ")
                         if queries.application_exists(application_id):
                             break
-
                         print("Application not found")
 
                     rows = queries.delete_application(application_id)
                     utils.display_data(utils.APPLICATION_HEADERS, rows)
-
 
                 elif choice == "5":
                     status = utils.get_non_empty_string("Enter the status: ")
                     rows = queries.search_applications_by_status(status)
                     if rows:
                         utils.display_data(utils.APPLICATION_HEADERS, rows)
-
                     else:
                         print("Application not found")
-
 
                 elif choice == "6":
                     student_id = utils.get_valid_id("Enter the student id: ")
@@ -593,10 +588,8 @@ while True:
                         rows = queries.search_applications_by_student_id(student_id)
                         if rows:
                             utils.display_data(utils.APPLICATION_HEADERS, rows)
-
                         else:
                             print("Application not found")
-
 
                 elif choice == "7":
                     job_id = utils.get_valid_id("Enter the job id: ")
@@ -604,37 +597,34 @@ while True:
                         rows = queries.search_applications_by_job_id(job_id)
                         if rows:
                             utils.display_data(utils.APPLICATION_HEADERS, rows)
-
                         else:
                             print("Application not found")
 
-
                 elif choice == "8":
-                    rows = queries.sort_applications_by_date()
+                    rows = queries.get_applications_sorted_by_date()
                     utils.display_data(utils.APPLICATION_HEADERS, rows)
 
-
                 elif choice == "9":
-                    rows = queries.sort_applications_by_status()
+                    rows = queries.get_applications_sorted_by_status()
                     utils.display_data(utils.APPLICATION_HEADERS, rows)
 
                 elif choice == "10":
-                    rows = queries.total_applications()
-                    print(rows)
-
+                    rows = queries.get_total_applications()
+                    if rows:
+                        utils.display_data(['Total System Applications'], rows)
+                    else:
+                        print("No metrics available")
 
                 elif choice == "11":
-                    rows = queries.applications_by_status()
+                    rows = queries.get_application_count_by_status()
                     if rows:
-                        utils.display_data(['Status','number_of_applications'], rows)
-
+                        # Cleaned Title Case layout metrics string 
+                        utils.display_data(['Application Status', 'Total Application Count'], rows)
                     else:
                         print("Application not found")
 
-                    
                 elif choice == "12":
                     break
-
 
                 else:
                     print("Enter a valid input")
@@ -647,268 +637,216 @@ while True:
             while True:
 
                 choice = input('''
-                               ============== RELATIONAL QUERIES & REPORTS ==============
+                ============================================================
+                📊 RELATIONAL ANALYTICS & REPORTING ENGINE
+                ============================================================
 
-                            ---------- STUDENT APPLICATION INSIGHTS ----------
-                               
-                            1. View Student Application Lifecycles (Name, Job, Company, Status)
-                            2. Filter Applications by Target Company Name
-                            3. High-Activity Applicants (Students with > 2 Applications)
+                ---------- STUDENT APPLICATION INSIGHTS ----------
 
-                            ---------- COMPANY ANALYTICS ----------
-                               
-                            4. Job Board Footprint (Total Jobs & Openings Per Company)
-                            5. Application Volume Market Share Per Company
-                            6. Core Leaderboard (Company with Most Applications)
-                            7. Compensation Leader (Company Offering Highest Average Salary)
-                            8. Cross-Border Talent (Companies Hiring International Students)
+                1. View Complete Student Application History (Full Context)
+                2. Filter Applicant Profiles by Company Name
+                3. Identify High-Volume Candidates (Multiple Applications)
 
-                            ---------- JOB MARKET INSIGHTS ----------
-                               
-                            9. Complete Job Postings Registry with Corporate Parent Names
-                            10. Premium Roles (Top 5 Highest Paying Jobs & Their Companies)
-                            11. Market Wage Benchmark by Industry (Average Offered Salary Per Industry)
-                            12. Stale Listings (Active Job Postings with Zero Applications)
-                            13. Highly Competitive Positions (Jobs with Most Applications)
+                ---------- COMPANY ANALYTICS ----------
 
-                            ----------  ADVANCED BUSINESS INSIGHTS QUERIES ----------
-                               
-                            14. Strategic Funnel Insight (Interview Scheduled/ Total applications Rate Per Company)
-                            15. Churn Metrics (Total Rejected Applications Per Industry Entity)
-                            16. Talent Diversification (Students Applying to Multiple Competitors)
-                            17. Dead Corporate Profiles (Companies with Zero Active Job Postings)
-                            18. Unengaged Talent Pool (Students with Zero Submitted Applications)
-                            19. Demographics Pipeline (Average Applicant Age Per Industry Entity)
-                            20. Geographic Velocity (Country with the Highest Volume of Job Applicants)
-                            
-                            ---------- TEMPORAL & DATE ANALYTICS ----------
+                4. View Total Job Openings Per Company
+                5. View Total Applications Received Per Company
+                6. View Top Company by Total Applications Received
+                7. View Highest Paying Corporate Profiles (By Average Salary)
+                8. View International Student Applications (Cross-Border Talent)
 
-                            21. Monthly Application Trends (Peak Application Months)
-                            22. Aging Applications (Unresolved Applications Older Than 14 Days)
+                ---------- JOB MARKET INSIGHTS ----------
 
-                            23. Back
+                9. View Master Job Postings Registry (With Company Details)
+                10. View Top 5 Highest Paying Job Postings
+                11. View Average Salary Metrics Per Industry
+                12. View Stagnant Positions (Jobs with Zero Applications)
+                13. View Top 10 Most Competitive Job Positions
 
-                            Enter your choice: ''')
+                ---------- ADVANCED BUSINESS INSIGHTS ----------
+
+                14. View Interview Conversion Rate Per Company
+                15. View Rejected Applications Per Industry Segment
+                16. Identify Application Diversification (Applying to Multiple Companies)
+                17. View Inactive Corporate Accounts (Companies with No Jobs)
+                18. View Unengaged Talent Pool (Students with No Applications)
+                19. View Average Applicant Age Per Industry Sector
+                20. View Top Applicant Country (Highest Applicant Volume)
+
+                ---------- TEMPORAL & DATE ANALYTICS ----------
+
+                21. View Monthly Application Volume Trends
+                22. View Operational SLA Breaches (Applications Pending > 14 Days)
+
+                ---------- SYSTEM ----------
+
+                23. ↩️ Back to Main Menu
+
+                Enter your choice (1-23): ''')
                 
                 if choice == "1":
                     rows = queries.get_students_application_job_and_company()
                     if rows:
-                        utils.display_data(['name','title','company_name','status'], rows)
-
+                        utils.display_data(['Student Name', 'Job Title', 'Company Name', 'Application Status'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "2":
                     company_name = utils.get_non_empty_string("Enter the company name: ")
-                    rows = queries.get_students_applied_to_company(company_name)
+                    # Correctly aligned to use search_ pattern for dynamic text input
+                    rows = queries.search_students_applied_to_company(company_name)
                     if rows:
-                        utils.display_data(['name'], rows)
-
+                        utils.display_data(['Student Name'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "3":
                     rows = queries.get_students_with_multiple_applications()
                     if rows:
-                        utils.display_data(['id','name','no. of applications'], rows)
-
+                        utils.display_data(['Student ID', 'Student Name', 'Total Applications Submitted'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "4":
                     rows = queries.get_job_openings_per_company()
                     if rows:
-                        utils.display_data(['id','company_name','job_openings'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name', 'Active Job Openings'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "5":
                     rows = queries.get_application_count_per_company()
                     if rows:
-                        utils.display_data(['id','company_name','no_of_applications'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name', 'Total Applications Received'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "6":
                     rows = queries.get_company_with_highest_applications()
                     if rows:
-                        utils.display_data(['id','company_name','no_of_applications'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name', 'Total Applications Received'], rows)
                     else:
                         print("No records found")
-
                 
                 elif choice == "7":
                     rows = queries.get_company_with_highest_average_salary()
                     if rows:
-                        utils.display_data(['id','company_name','average_salary'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name', 'Average Annual Salary'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "8":
                     rows = queries.get_company_open_to_international_students()
                     if rows:
-                        utils.display_data(['student_name','student_country','company_name','company_country','application_status'], rows)
-
+                        utils.display_data(['Student Name', 'Student Country', 'Company Name', 'Company Country', 'Application Status'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "9":
                     rows = queries.get_all_jobs_info()
                     if rows:
-                        utils.display_data(['job_id','job_title','company_name','company_country','salary'], rows)
-
+                        utils.display_data(['Job ID', 'Job Title', 'Company Name', 'Company Country', 'Offered Salary'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "10":
                     rows = queries.get_highest_5_paying_jobs()
                     if rows:
-                        utils.display_data(['job_id','job_title','company_name','company_country','salary'], rows)
-
+                        utils.display_data(['Job ID', 'Job Title', 'Company Name', 'Company Country', 'Premium Salary'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "11":
                     rows = queries.get_average_salary_by_industry()
                     if rows:
-                        utils.display_data(['Industry','average_salary'], rows)
-
+                        utils.display_data(['Industry Sector', 'Average Salary Metrics'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "12":
-                    rows = queries.job_postings_with_no_applications()
+                    # Added 'get_' prefix to match design guidelines
+                    rows = queries.get_job_postings_with_no_applications()
                     if rows:
-                        utils.display_data(['job_id','job_title','company_name'], rows)
-
+                        utils.display_data(['Job ID', 'Job Title', 'Company Name'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "13":
-                    rows = queries.job_postings_with_most_applications()
+                    # Added 'get_' prefix to match design guidelines
+                    rows = queries.get_job_postings_with_most_applications()
                     if rows:
-                        utils.display_data(['job_id','job_title','number_of_applications'], rows)
-
+                        utils.display_data(['Job ID', 'Job Title', 'Total Applications Gathered'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "14":
                     rows = queries.get_interview_rate_per_company()
                     if rows:
-                        utils.display_data(['company_id','company_name','total_applications','interview_schdeuled','interview_schdeuled_rate(%)'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name', 'Total Applications', 'Interviews Scheduled', 'Interview Scheduled Rate (%)'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "15":
                     rows = queries.get_number_of_rejected_applications_per_industry()
                     if rows:
-                        utils.display_data(['Industry','number_of_rejection'], rows)
-
+                        utils.display_data(['Industry Sector', 'Total Rejection Count'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "16":
                     rows = queries.get_students_with_applications_to_multiple_companies()
                     if rows:
-                        utils.display_data(['student_id','student_name','no_of_companies'], rows)
-
+                        utils.display_data(['Student ID', 'Student Name', 'Total Companies Applied To'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "17":
                     rows = queries.get_company_with_no_job_listings()
                     if rows:
-                        utils.display_data(['company_id','company_name'], rows)
-
+                        utils.display_data(['Company ID', 'Company Name'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "18":
                     rows = queries.get_students_with_no_applications()
                     if rows:
-                        utils.display_data(['student_id','student_name'], rows)
-
+                        utils.display_data(['Student ID', 'Student Name'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "19":
                     rows = queries.get_students_average_age_per_industry()
                     if rows:
-                        utils.display_data(['Industry','average_age'], rows)
-
+                        utils.display_data(['Industry Sector', 'Average Applicant Age'], rows)
                     else:
                         print("No records found")
-
-
 
                 elif choice == "20":
                     rows = queries.get_country_with_highest_applicants()
                     if rows:
-                        utils.display_data(['Country','number_of_applicants'], rows)
-
+                        utils.display_data(['Demographic Country', 'Total Applicant Volume'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "21":
                     rows = queries.get_number_of_applications_monthly()
                     if rows:
-                        utils.display_data(['month','year','number_of_applicants'], rows)
-
+                        utils.display_data(['Month', 'Year', 'Monthly Applications Count'], rows)
                     else:
                         print("No records found")
-
 
                 elif choice == "22":
                     rows = queries.get_aged_applications()
                     if rows:
-                        utils.display_data(['application_id','student_id','job_id','application_date','status','no_of_days'], rows)
-
+                        utils.display_data(['Application ID', 'Student ID', 'Job ID', 'Application Date', 'Status', 'Days In Queue'], rows)
                     else:
                         print("No records found")
-                
 
                 elif choice == "23":
                     break
 
-
                 else:
                     print("Enter a valid input")
-
-
-                        
-        elif choice == "6":
-            break
-
-        else:
-            print("Enter a valid input: ")
 
 
     except Exception as e:

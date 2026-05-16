@@ -1,3 +1,4 @@
+import psycopg2
 from db_connect import get_connection
 
 
@@ -6,7 +7,7 @@ from db_connect import get_connection
 # =========================
 
 
-def fetch_students():
+def get_all_students():
 
     conn = None
     cur = None
@@ -20,10 +21,10 @@ def fetch_students():
         rows = cur.fetchall()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while fetching students")
         print(e)
-
+        return []
 
     finally:
         if cur:
@@ -50,13 +51,14 @@ def insert_student(name, country, age):
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while inserting students")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -85,13 +87,14 @@ def update_student(name, country, age, student_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while updating students")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -117,13 +120,14 @@ def delete_student(student_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while deleting students")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -151,10 +155,9 @@ def student_exists(student_id):
         else:
             return True
         
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while checking student existence")
         print(e)
-
         return False
 
     finally:
@@ -179,10 +182,10 @@ def search_students_by_country(country):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching students by country")
         print(e)
-
+        return []
 
     finally:
 
@@ -206,10 +209,10 @@ def search_students_by_name(name):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching students by name")
         print(e)
-
+        return []
 
     finally:
 
@@ -219,7 +222,7 @@ def search_students_by_name(name):
             conn.close()
 
 
-def students_older_than_year_old(age):
+def get_students_older_than(age):
 
     conn = None
     cur = None
@@ -231,10 +234,10 @@ def students_older_than_year_old(age):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching students by name")
+    except psycopg2.Error as e:
+        print("Error while searching students by age threshold")
         print(e)
-
+        return []
 
     finally:
 
@@ -244,7 +247,7 @@ def students_older_than_year_old(age):
             conn.close()
 
 
-def students_between_age1_and_age2(age1,age2):
+def get_students_between_ages(min_age,max_age):
 
     conn = None
     cur = None
@@ -252,14 +255,14 @@ def students_between_age1_and_age2(age1,age2):
         conn = get_connection()
         cur = conn.cursor()
         query = "select * from students where age between %s and %s order by age"
-        cur.execute(query,(age1,age2))
+        cur.execute(query,(min_age,max_age))
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching students by name")
+    except psycopg2.Error as e:
+        print("Error while searching students between ages")
         print(e)
-
+        return []
 
     finally:
 
@@ -269,7 +272,7 @@ def students_between_age1_and_age2(age1,age2):
             conn.close()
 
 
-def sort_students_by_name():
+def get_students_sorted_by_name():
 
     conn = None
     cur = None
@@ -282,10 +285,10 @@ def sort_students_by_name():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting students by name")
         print(e)
-
+        return []
 
     finally:
 
@@ -295,7 +298,7 @@ def sort_students_by_name():
             conn.close()
 
 
-def sort_students_by_increasing_age():
+def get_students_sorted_by_age_asc():
 
     conn = None
     cur = None
@@ -308,10 +311,10 @@ def sort_students_by_increasing_age():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while sorting students by age")
+    except psycopg2.Error as e:
+        print("Error while sorting students by age asc")
         print(e)
-
+        return []
 
     finally:
 
@@ -321,7 +324,7 @@ def sort_students_by_increasing_age():
             conn.close()
 
 
-def sort_students_by_decreasing_age():
+def get_students_sorted_by_age_desc():
 
     conn = None
     cur = None
@@ -334,10 +337,10 @@ def sort_students_by_decreasing_age():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while sorting students by age")
+    except psycopg2.Error as e:
+        print("Error while sorting students by age desc")
         print(e)
-
+        return []
 
     finally:
 
@@ -347,7 +350,7 @@ def sort_students_by_decreasing_age():
             conn.close()
 
 
-def sort_students_by_country_then_age():
+def get_students_sorted_by_country_and_age():
 
     conn = None
     cur = None
@@ -360,10 +363,10 @@ def sort_students_by_country_then_age():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting students by country,age")
         print(e)
-
+        return []
 
     finally:
 
@@ -373,7 +376,7 @@ def sort_students_by_country_then_age():
             conn.close()
 
 
-def total_students():
+def get_total_students():
 
     conn = None
     cur = None
@@ -384,12 +387,12 @@ def total_students():
         query = "select count(*) from students"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while counting students")
         print(e)
-
+        return None
 
     finally:
 
@@ -399,7 +402,7 @@ def total_students():
             conn.close()
 
 
-def average_age_students():
+def get_average_student_age():
 
     conn = None
     cur = None
@@ -410,12 +413,12 @@ def average_age_students():
         query = "select round(avg(age),2) from students"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0.0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating average age of students")
         print(e)
-
+        return None
 
     finally:
 
@@ -426,7 +429,7 @@ def average_age_students():
 
 
 
-def max_age_students():
+def get_oldest_student_age():
 
     conn = None
     cur = None
@@ -437,12 +440,12 @@ def max_age_students():
         query = "select max(Age) from students"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating max age of students")
         print(e)
-
+        return None
 
     finally:
 
@@ -453,7 +456,7 @@ def max_age_students():
 
 
 
-def min_age_students():
+def get_youngest_student_age():
 
     conn = None
     cur = None
@@ -464,12 +467,12 @@ def min_age_students():
         query = "select min(Age) from students"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating min age of students")
         print(e)
-
+        return None
 
     finally:
 
@@ -479,7 +482,7 @@ def min_age_students():
             conn.close()
 
 
-def students_per_country():
+def get_student_count_by_country():
 
     conn = None
     cur = None
@@ -492,10 +495,10 @@ def students_per_country():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating students per country")
         print(e)
-
+        return []
 
     finally:
 
@@ -505,7 +508,7 @@ def students_per_country():
             conn.close()
 
 
-def average_age_per_country():
+def get_average_student_age_by_country():
 
     conn = None
     cur = None
@@ -518,10 +521,10 @@ def average_age_per_country():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating average age of students per country")
         print(e)
-
+        return []
 
     finally:
 
@@ -536,7 +539,7 @@ def average_age_per_country():
 # =========================
 
 
-def fetch_companies():
+def get_all_companies():
 
     conn = None
     cur = None
@@ -550,10 +553,10 @@ def fetch_companies():
         rows = cur.fetchall()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while fetching companies")
         print(e)
-
+        return []
 
     finally:
         if cur:
@@ -579,13 +582,14 @@ def insert_company(company_name, country, industry):
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while inserting companies")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -594,7 +598,7 @@ def insert_company(company_name, country, industry):
             conn.close()
 
 
-def update_companies(company_name, country, industry, company_id):
+def update_company(company_name, country, industry, company_id):
 
     conn = None
     cur = None
@@ -613,13 +617,14 @@ def update_companies(company_name, country, industry, company_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while updating companies")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -647,10 +652,9 @@ def company_exists(company_id):
         else:
             return True
         
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while checking company existence")
         print(e)
-
         return False
 
     finally:
@@ -676,13 +680,14 @@ def delete_company(company_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while deleting companies")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -705,10 +710,10 @@ def search_companies_by_name(company_name):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching companies by name")
         print(e)
-
+        return []
 
     finally:
 
@@ -733,10 +738,10 @@ def search_companies_by_country(country):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching companies by country")
         print(e)
-
+        return []
 
     finally:
 
@@ -761,10 +766,10 @@ def search_companies_by_industry(industry):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching companies by industry")
         print(e)
-
+        return []
 
     finally:
 
@@ -774,7 +779,7 @@ def search_companies_by_industry(industry):
             conn.close()
 
 
-def sort_companies_by_company_name():
+def get_companies_sorted_by_name():
 
     conn = None
     cur = None
@@ -787,10 +792,10 @@ def sort_companies_by_company_name():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting companies by name")
         print(e)
-
+        return []
 
     finally:
 
@@ -800,7 +805,35 @@ def sort_companies_by_company_name():
             conn.close()
 
 
-def total_companies():
+
+def get_companies_sorted_by_country():
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        query = "select * from companies order by country"
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    
+    except psycopg2.Error as e:
+        print("Error while sorting companies by country")
+        print(e)
+        return []
+
+    finally:
+
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+def get_total_companies():
 
     conn = None
     cur = None
@@ -811,12 +844,12 @@ def total_companies():
         query = "select count(*) from companies"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
-        print("Error while calculating companies")
+    except psycopg2.Error as e:
+        print("Error while calculating total companies")
         print(e)
-
+        return None
 
     finally:
 
@@ -826,7 +859,7 @@ def total_companies():
             conn.close()
 
 
-def companies_per_country():
+def get_company_count_by_country():
 
     conn = None
     cur = None
@@ -839,10 +872,10 @@ def companies_per_country():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating companies per country")
         print(e)
-
+        return []
 
     finally:
 
@@ -851,7 +884,7 @@ def companies_per_country():
         if conn:
             conn.close()
 
-def companies_per_industry():
+def get_company_count_by_industry():
 
     conn = None
     cur = None
@@ -864,10 +897,10 @@ def companies_per_industry():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating companies per industry")
         print(e)
-
+        return []
 
     finally:
 
@@ -881,7 +914,7 @@ def companies_per_industry():
 # JOBS QUERIES
 # =========================
 
-def fetch_jobs():
+def get_all_jobs():
 
     conn = None
     cur = None
@@ -895,10 +928,10 @@ def fetch_jobs():
         rows = cur.fetchall()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while fetching jobs")
         print(e)
-
+        return []
 
     finally:
         if cur:
@@ -925,13 +958,14 @@ def insert_job(title, salary, location, company_id):
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
-        print("Error while inserting companies")
+        print("Error while inserting jobs")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -940,7 +974,7 @@ def insert_job(title, salary, location, company_id):
             conn.close()
 
 
-def fetch_company_ids_and_names():
+def get_company_ids_and_names():
 
     conn = None
     cur = None
@@ -956,13 +990,14 @@ def fetch_company_ids_and_names():
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while fetching companies id and name")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -991,10 +1026,9 @@ def job_exists(job_id):
         else:
             return True
         
-    except Exception as e:
-        print("Error while checking company existence")
+    except psycopg2.Error as e:
+        print("Error while checking job existence")
         print(e)
-
         return False
 
     finally:
@@ -1005,7 +1039,7 @@ def job_exists(job_id):
 
 
 
-def update_jobs(title, salary, location, company_id, job_id):
+def update_job(title, salary, location, company_id, job_id):
 
     conn = None
     cur = None
@@ -1025,13 +1059,14 @@ def update_jobs(title, salary, location, company_id, job_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while updating jobs")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1057,13 +1092,14 @@ def delete_job(job_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while deleting jobs")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1086,10 +1122,10 @@ def search_jobs_by_title(title):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching companies by name")
+    except psycopg2.Error as e:
+        print("Error while searching jobs by title")
         print(e)
-
+        return []
 
     finally:
 
@@ -1113,10 +1149,10 @@ def search_jobs_by_location(location):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching companies by name")
+    except psycopg2.Error as e:
+        print("Error while searching jobs by location")
         print(e)
-
+        return []
 
     finally:
 
@@ -1126,7 +1162,7 @@ def search_jobs_by_location(location):
             conn.close()
 
 
-def jobs_with_salary_above(salary):
+def get_jobs_with_salary_above(salary):
 
     conn = None
     cur = None
@@ -1138,10 +1174,10 @@ def jobs_with_salary_above(salary):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching jobs with salaray above")
+    except psycopg2.Error as e:
+        print("Error while searching jobs with salary above threshold")
         print(e)
-
+        return []
 
     finally:
 
@@ -1151,7 +1187,7 @@ def jobs_with_salary_above(salary):
             conn.close()
 
 
-def jobs_between_salary1_and_salary2(salary1,salary2):
+def get_jobs_between_salaries(min_salary,max_salary):
 
     conn = None
     cur = None
@@ -1159,14 +1195,14 @@ def jobs_between_salary1_and_salary2(salary1,salary2):
         conn = get_connection()
         cur = conn.cursor()
         query = "select * from jobs where salary between %s and %s order by salary"
-        cur.execute(query,(salary1, salary2))
+        cur.execute(query,(min_salary, max_salary))
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while searching salary in between")
+    except psycopg2.Error as e:
+        print("Error while searching salary in between parameters")
         print(e)
-
+        return []
 
     finally:
 
@@ -1177,7 +1213,7 @@ def jobs_between_salary1_and_salary2(salary1,salary2):
 
 
 
-def sort_jobs_by_salary_increasing():
+def get_jobs_sorted_by_salary_asc():
 
     conn = None
     cur = None
@@ -1190,10 +1226,10 @@ def sort_jobs_by_salary_increasing():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting jobs by salary increasingly")
         print(e)
-
+        return []
 
     finally:
 
@@ -1203,7 +1239,7 @@ def sort_jobs_by_salary_increasing():
             conn.close()
 
 
-def sort_jobs_by_salary_decreasing():
+def get_jobs_sorted_by_salary_desc():
 
     conn = None
     cur = None
@@ -1216,10 +1252,10 @@ def sort_jobs_by_salary_decreasing():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting jobs by salary decreasingly")
         print(e)
-
+        return []
 
     finally:
 
@@ -1230,7 +1266,7 @@ def sort_jobs_by_salary_decreasing():
 
 
 
-def sort_jobs_by_title():
+def get_jobs_sorted_by_title():
 
     conn = None
     cur = None
@@ -1243,10 +1279,10 @@ def sort_jobs_by_title():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting jobs by title")
         print(e)
-
+        return []
 
     finally:
 
@@ -1256,7 +1292,7 @@ def sort_jobs_by_title():
             conn.close()
 
 
-def total_jobs():
+def get_total_jobs():
 
     conn = None
     cur = None
@@ -1267,12 +1303,12 @@ def total_jobs():
         query = "select count(*) from jobs"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating total jobs")
         print(e)
-
+        return None
 
     finally:
 
@@ -1283,7 +1319,7 @@ def total_jobs():
 
 
 
-def average_salary_jobs():
+def get_average_job_salary():
 
     conn = None
     cur = None
@@ -1294,12 +1330,12 @@ def average_salary_jobs():
         query = "select round(avg(salary), 2) from jobs"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0.0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating average salary job")
         print(e)
-
+        return None
 
     finally:
 
@@ -1310,7 +1346,7 @@ def average_salary_jobs():
 
 
 
-def highest_paying_job():
+def get_highest_paying_job():
 
     conn = None
     cur = None
@@ -1323,10 +1359,10 @@ def highest_paying_job():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating highest salary job")
         print(e)
-
+        return []
 
     finally:
 
@@ -1337,7 +1373,7 @@ def highest_paying_job():
 
 
 
-def lowest_paying_job():
+def get_lowest_paying_job():
 
     conn = None
     cur = None
@@ -1350,10 +1386,10 @@ def lowest_paying_job():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating lowest salary job")
         print(e)
-
+        return []
 
     finally:
 
@@ -1369,7 +1405,7 @@ def lowest_paying_job():
 # =========================
 
 
-def fetch_applications():
+def get_all_applications():
 
     conn = None
     cur = None
@@ -1383,10 +1419,10 @@ def fetch_applications():
         rows = cur.fetchall()
         return rows
 
-    except Exception as e:
-        print("Error while fetching jobs")
+    except psycopg2.Error as e:
+        print("Error while fetching applications")
         print(e)
-
+        return []
 
     finally:
         if cur:
@@ -1396,7 +1432,7 @@ def fetch_applications():
 
 
 
-def insert_applications(student_id, job_id, application_date, status):
+def insert_application(student_id, job_id, application_date, status):
 
     conn = None
     cur = None
@@ -1413,13 +1449,14 @@ def insert_applications(student_id, job_id, application_date, status):
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
-        print("Error while inserting companies")
+        print("Error while inserting applications")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1429,7 +1466,7 @@ def insert_applications(student_id, job_id, application_date, status):
 
 
 
-def fetch_student_ids_and_names():
+def get_student_ids_and_names():
 
     conn = None
     cur = None
@@ -1445,13 +1482,14 @@ def fetch_student_ids_and_names():
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while fetching students id and name")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1461,7 +1499,7 @@ def fetch_student_ids_and_names():
 
 
 
-def fetch_jobs_ids_and_names():
+def get_job_ids_and_names():
 
     conn = None
     cur = None
@@ -1477,13 +1515,14 @@ def fetch_jobs_ids_and_names():
         return rows
     
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while fetching jobs id and name")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1493,7 +1532,7 @@ def fetch_jobs_ids_and_names():
 
 
 
-def update_applications(application_date, status, application_id):
+def update_application(application_date, status, application_id):
 
     conn = None
     cur = None
@@ -1511,13 +1550,14 @@ def update_applications(application_date, status, application_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while updating applications")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1546,10 +1586,9 @@ def application_exists(application_id):
         else:
             return True
         
-    except Exception as e:
-        print("Error while checking company existence")
+    except psycopg2.Error as e:
+        print("Error while checking application existence")
         print(e)
-
         return False
 
     finally:
@@ -1576,13 +1615,14 @@ def delete_application(application_id):
         conn.commit()
         return rows
 
-    except Exception as e:
+    except psycopg2.Error as e:
 
         if conn:
             conn.rollback()
 
         print("Error while deleting applications")
         print(e)
+        return []
 
     finally:
         if cur:
@@ -1606,10 +1646,10 @@ def search_applications_by_status(status):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching applications by status")
         print(e)
-
+        return []
 
     finally:
 
@@ -1628,15 +1668,15 @@ def search_applications_by_student_id(student_id):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = "select * from applications where student_id = '%s' order by id"
+        query = "select * from applications where student_id = %s order by id"
         cur.execute(query,(student_id,))
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching applications by student id")
         print(e)
-
+        return []
 
     finally:
 
@@ -1655,15 +1695,15 @@ def search_applications_by_job_id(job_id):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = "select * from applications where job_id = '%s' order by id"
+        query = "select * from applications where job_id = %s order by id"
         cur.execute(query,(job_id,))
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while searching applications by job id")
         print(e)
-
+        return []
 
     finally:
 
@@ -1674,7 +1714,7 @@ def search_applications_by_job_id(job_id):
 
 
 
-def sort_applications_by_date():
+def get_applications_sorted_by_date():
 
     conn = None
     cur = None
@@ -1687,10 +1727,10 @@ def sort_applications_by_date():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting applications by application_date")
         print(e)
-
+        return []
 
     finally:
 
@@ -1701,7 +1741,7 @@ def sort_applications_by_date():
 
 
 
-def sort_applications_by_status():
+def get_applications_sorted_by_status():
 
     conn = None
     cur = None
@@ -1714,10 +1754,10 @@ def sort_applications_by_status():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while sorting applications by status")
         print(e)
-
+        return []
 
     finally:
 
@@ -1728,7 +1768,7 @@ def sort_applications_by_status():
 
 
 
-def total_applications():
+def get_total_applications():
 
     conn = None
     cur = None
@@ -1739,12 +1779,12 @@ def total_applications():
         query = "select count(*) from applications"
         cur.execute(query)
         rows = cur.fetchone()
-        return rows[0]
+        return rows[0] if rows else 0
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating total applications")
         print(e)
-
+        return None
 
     finally:
 
@@ -1756,7 +1796,7 @@ def total_applications():
 
 
 
-def applications_by_status():
+def get_application_count_by_status():
 
     conn = None
     cur = None
@@ -1769,10 +1809,10 @@ def applications_by_status():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while calculating total applications by status")
+    except psycopg2.Error as e:
+        print("Error while calculating applications by status")
         print(e)
-
+        return []
 
     finally:
 
@@ -1780,6 +1820,11 @@ def applications_by_status():
             cur.close()
         if conn:
             conn.close()
+
+
+# =========================
+# Relational QUERIES
+# =========================
 
 
 
@@ -1799,10 +1844,10 @@ def get_students_application_job_and_company():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while calculating getting students application job name and company")
+    except psycopg2.Error as e:
+        print("Error while getting students application job name and company details")
         print(e)
-
+        return []
 
     finally:
 
@@ -1813,7 +1858,7 @@ def get_students_application_job_and_company():
 
 
 
-def get_students_applied_to_company(company_name):
+def search_students_applied_to_company(company_name):
 
     conn = None
     cur = None
@@ -1831,10 +1876,10 @@ def get_students_applied_to_company(company_name):
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating student applied to a particular company")
         print(e)
-
+        return []
 
     finally:
 
@@ -1862,10 +1907,10 @@ def get_students_with_multiple_applications():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while calculating getting students application job name and company")
+    except psycopg2.Error as e:
+        print("Error while fetching students with multiple applications")
         print(e)
-
+        return []
 
     finally:
 
@@ -1892,10 +1937,10 @@ def get_job_openings_per_company():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating jobs opening per company")
         print(e)
-
+        return []
 
     finally:
 
@@ -1922,10 +1967,10 @@ def get_application_count_per_company():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating applications volume per company")
         print(e)
-
+        return []
 
     finally:
 
@@ -1954,10 +1999,10 @@ def get_company_with_highest_applications():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating company with highest applications")
         print(e)
-
+        return []
 
     finally:
 
@@ -1985,10 +2030,10 @@ def get_company_with_highest_average_salary():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating company with highest average salary")
         print(e)
-
+        return []
 
     finally:
 
@@ -2017,10 +2062,10 @@ def get_company_open_to_international_students():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating company with international students")
         print(e)
-
+        return []
 
     finally:
 
@@ -2046,10 +2091,10 @@ def get_all_jobs_info():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting all jobs")
+    except psycopg2.Error as e:
+        print("Error while getting all jobs metadata")
         print(e)
-
+        return []
 
     finally:
 
@@ -2076,10 +2121,10 @@ def get_highest_5_paying_jobs():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while getting highest 5 paying jobs")
         print(e)
-
+        return []
 
     finally:
 
@@ -2106,10 +2151,10 @@ def get_average_salary_by_industry():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while calculating avg salary by industry")
         print(e)
-
+        return []
 
     finally:
 
@@ -2120,7 +2165,7 @@ def get_average_salary_by_industry():
 
 
 
-def job_postings_with_no_applications():
+def get_job_postings_with_no_applications():
 
     conn = None
     cur = None
@@ -2136,10 +2181,10 @@ def job_postings_with_no_applications():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while getting job postings with no applications")
         print(e)
-
+        return []
 
     finally:
 
@@ -2150,7 +2195,7 @@ def job_postings_with_no_applications():
 
 
 
-def job_postings_with_most_applications():
+def get_job_postings_with_most_applications():
 
     conn = None
     cur = None
@@ -2160,17 +2205,18 @@ def job_postings_with_most_applications():
         cur = conn.cursor()
         query = '''select j.id, j.title, count(*) as no_of_applications from jobs as j
                 join companies as c on j.company_id = c.id
+                LEFT JOIN applications as a ON j.id = a.job_id
                 group by j.id, j.title
                 order by no_of_applications desc
-                limit 1'''
+                limit 10'''
         cur.execute(query)
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while getting job postings with most applications")
         print(e)
-
+        return []
 
     finally:
 
@@ -2208,10 +2254,10 @@ def get_interview_rate_per_company():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
+    except psycopg2.Error as e:
         print("Error while getting interview rate per company")
         print(e)
-
+        return []
 
     finally:
 
@@ -2246,10 +2292,10 @@ def get_number_of_rejected_applications_per_industry():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting rejections per industry")
         print(e)
-
+        return []
 
     finally:
 
@@ -2277,10 +2323,10 @@ def get_students_with_applications_to_multiple_companies():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting students applying to multiple companies")
         print(e)
-
+        return []
 
     finally:
 
@@ -2306,10 +2352,10 @@ def get_company_with_no_job_listings():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting companies with no job listings")
         print(e)
-
+        return []
 
     finally:
 
@@ -2336,10 +2382,10 @@ def get_students_with_no_applications():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting students with no applications")
         print(e)
-
+        return []
 
     finally:
 
@@ -2367,10 +2413,10 @@ def get_students_average_age_per_industry():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting average student age per industry")
         print(e)
-
+        return []
 
     finally:
 
@@ -2398,10 +2444,10 @@ def get_country_with_highest_applicants():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting country with highest applicants")
         print(e)
-
+        return []
 
     finally:
 
@@ -2428,10 +2474,10 @@ def get_number_of_applications_monthly():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting monthly applications volume")
         print(e)
-
+        return []
 
     finally:
 
@@ -2458,10 +2504,10 @@ def get_aged_applications():
         rows = cur.fetchall()
         return rows
     
-    except Exception as e:
-        print("Error while getting interview rate per company")
+    except psycopg2.Error as e:
+        print("Error while getting aged applications details")
         print(e)
-
+        return []
 
     finally:
 
