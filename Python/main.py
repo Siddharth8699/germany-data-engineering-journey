@@ -647,54 +647,263 @@ while True:
             while True:
 
                 choice = input('''
-                        ============== RELATIONAL QUERIES & REPORTS ==============
+                               ============== RELATIONAL QUERIES & REPORTS ==============
 
-                        ---------- STUDENT APPLICATION INSIGHTS ----------
+                            ---------- STUDENT APPLICATION INSIGHTS ----------
+                               
+                            1. View Student Application Lifecycles (Name, Job, Company, Status)
+                            2. Filter Applications by Target Company Name
+                            3. High-Activity Applicants (Students with > 2 Applications)
 
-                        1. View Students And Applied Jobs
-                        2. View Students With Company Names
-                        3. View Student Applications With Status
-                        4. View Students Applied To Specific Company
-                        5. View Students Applied To Multiple Jobs
+                            ---------- COMPANY ANALYTICS ----------
+                               
+                            4. Job Board Footprint (Total Jobs & Openings Per Company)
+                            5. Application Volume Market Share Per Company
+                            6. Core Leaderboard (Company with Most Applications)
+                            7. Compensation Leader (Company Offering Highest Average Salary)
+                            8. Cross-Border Talent (Companies Hiring International Students)
 
-                        ---------- COMPANY ANALYTICS ----------
+                            ---------- JOB MARKET INSIGHTS ----------
+                               
+                            9. Complete Job Postings Registry with Corporate Parent Names
+                            10. Premium Roles (Top 5 Highest Paying Jobs & Their Companies)
+                            11. Market Wage Benchmark by Industry (Average Offered Salary Per Industry)
+                            12. Stale Listings (Active Job Postings with Zero Applications)
+                            13. Highly Competitive Positions (Jobs with Most Applications)
 
-                        6. View Jobs Per Company
-                        7. View Applications Per Company
-                        8. Company With Most Applications
-                        9. Company Offering Highest Average Salary
-                        10. Companies Hiring In Germany
+                            ----------  ADVANCED BUSINESS INSIGHTS QUERIES ----------
+                               
+                            14. Strategic Funnel Insight (Interview Scheduled/ Total applications Rate Per Company)
+                            15. Churn Metrics (Total Rejected Applications Per Industry Entity)
+                            16. Talent Diversification (Students Applying to Multiple Competitors)
+                            17. Dead Corporate Profiles (Companies with Zero Active Job Postings)
+                            18. Unengaged Talent Pool (Students with Zero Submitted Applications)
+                            19. Demographics Pipeline (Average Applicant Age Per Industry Entity)
+                            20. Geographic Velocity (Country with the Highest Volume of Job Applicants)
+                            
+                            ---------- TEMPORAL & DATE ANALYTICS ----------
 
-                        ---------- JOB ANALYTICS ----------
+                            21. Monthly Application Trends (Peak Application Months)
+                            22. Aging Applications (Unresolved Applications Older Than 14 Days)
 
-                        11. View Jobs With Company Names
-                        12. Highest Paying Jobs With Companies
-                        13. Average Salary Per Company
-                        14. Jobs With No Applications
-                        15. Most Applied Jobs
+                            23. Back
 
-                        ---------- APPLICATION ANALYTICS ----------
-
-                        16. Applications Per Status
-                        17. Students With Interview Scheduled
-                        18. Rejected Applications Per Company
-                        19. Application Count Per Student
-                        20. Recent Applications
-
-                        ---------- ADVANCED RELATIONAL QUERIES ----------
-
-                        21. Students Who Applied To Multiple Companies
-                        22. Companies Without Jobs
-                        23. Students Without Applications
-                        24. Average Applicant Age Per Company
-                        25. Country With Most Applicants
-
-                        26. Back
-
-                        Enter your choice: ''')
+                            Enter your choice: ''')
                 
+                if choice == "1":
+                    rows = queries.get_students_application_job_and_company()
+                    if rows:
+                        utils.display_data(['name','title','company_name','status'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "2":
+                    company_name = utils.get_non_empty_string("Enter the company name: ")
+                    rows = queries.get_students_applied_to_company(company_name)
+                    if rows:
+                        utils.display_data(['name'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "3":
+                    rows = queries.get_students_with_multiple_applications()
+                    if rows:
+                        utils.display_data(['id','name','no. of applications'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "4":
+                    rows = queries.get_job_openings_per_company()
+                    if rows:
+                        utils.display_data(['id','company_name','job_openings'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "5":
+                    rows = queries.get_application_count_per_company()
+                    if rows:
+                        utils.display_data(['id','company_name','no_of_applications'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "6":
+                    rows = queries.get_company_with_highest_applications()
+                    if rows:
+                        utils.display_data(['id','company_name','no_of_applications'], rows)
+
+                    else:
+                        print("No records found")
+
+                
+                elif choice == "7":
+                    rows = queries.get_company_with_highest_average_salary()
+                    if rows:
+                        utils.display_data(['id','company_name','average_salary'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "8":
+                    rows = queries.get_company_open_to_international_students()
+                    if rows:
+                        utils.display_data(['student_name','student_country','company_name','company_country','application_status'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "9":
+                    rows = queries.get_all_jobs_info()
+                    if rows:
+                        utils.display_data(['job_id','job_title','company_name','company_country','salary'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "10":
+                    rows = queries.get_highest_5_paying_jobs()
+                    if rows:
+                        utils.display_data(['job_id','job_title','company_name','company_country','salary'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "11":
+                    rows = queries.get_average_salary_by_industry()
+                    if rows:
+                        utils.display_data(['Industry','average_salary'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "12":
+                    rows = queries.job_postings_with_no_applications()
+                    if rows:
+                        utils.display_data(['job_id','job_title','company_name'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "13":
+                    rows = queries.job_postings_with_most_applications()
+                    if rows:
+                        utils.display_data(['job_id','job_title','number_of_applications'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "14":
+                    rows = queries.get_interview_rate_per_company()
+                    if rows:
+                        utils.display_data(['company_id','company_name','total_applications','interview_schdeuled','interview_schdeuled_rate(%)'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "15":
+                    rows = queries.get_number_of_rejected_applications_per_industry()
+                    if rows:
+                        utils.display_data(['Industry','number_of_rejection'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "16":
+                    rows = queries.get_students_with_applications_to_multiple_companies()
+                    if rows:
+                        utils.display_data(['student_id','student_name','no_of_companies'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "17":
+                    rows = queries.get_company_with_no_job_listings()
+                    if rows:
+                        utils.display_data(['company_id','company_name'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "18":
+                    rows = queries.get_students_with_no_applications()
+                    if rows:
+                        utils.display_data(['student_id','student_name'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "19":
+                    rows = queries.get_students_average_age_per_industry()
+                    if rows:
+                        utils.display_data(['Industry','average_age'], rows)
+
+                    else:
+                        print("No records found")
+
+
+
+                elif choice == "20":
+                    rows = queries.get_country_with_highest_applicants()
+                    if rows:
+                        utils.display_data(['Country','number_of_applicants'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "21":
+                    rows = queries.get_number_of_applications_monthly()
+                    if rows:
+                        utils.display_data(['month','year','number_of_applicants'], rows)
+
+                    else:
+                        print("No records found")
+
+
+                elif choice == "22":
+                    rows = queries.get_aged_applications()
+                    if rows:
+                        utils.display_data(['application_id','student_id','job_id','application_date','status','no_of_days'], rows)
+
+                    else:
+                        print("No records found")
                 
 
+                elif choice == "23":
+                    break
+
+
+                else:
+                    print("Enter a valid input")
+
+
+                        
         elif choice == "6":
             break
 
