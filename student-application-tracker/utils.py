@@ -90,14 +90,14 @@ def display_data(headers, rows):
     print()
 
     for header in headers:
-        print(f"{header:<20}", end=" ")
+        print(f"{header:<25}", end=" ")
 
     print()
-    print("-" * (len(headers) * 20))
+    print("-" * (len(headers) * 25))
 
     for row in rows:
         for value in row:
-            print(f"{str(value):<20}", end=" ")
+            print(f"{str(value):<25}", end=" ")
         print()
 
 
@@ -122,3 +122,19 @@ def get_valid_date(message="Enter the date (YYYY-MM-DD): "):
 
         except ValueError:
             print("Invalid date format. Use YYYY-MM-DD")
+
+
+
+def display_metric(label, value):
+    """
+    Safely wraps a single numeric metric value into a grid matrix
+    and routes it to the main display table utility.
+    """
+    # If the database layer returns None, fall back to 0 gracefully
+    safe_value = value if value is not None else 0
+    
+    # Automatically box the single value into a nested list [[ value ]]
+    wrapped_matrix = [[safe_value]]
+    
+    # Send it to your master table printer
+    display_data([label], wrapped_matrix)

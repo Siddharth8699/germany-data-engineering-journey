@@ -147,29 +147,29 @@ while True:
 
                 elif choice == "13":
                     rows = queries.get_total_students()
-                    if rows:
-                        utils.display_data(['Total Registered Students'], rows)
+                    if rows is not None:
+                        utils.display_metric('Total Registered Students', rows)
                     else:
                         print("No students found")
 
                 elif choice == "14":
                     rows = queries.get_average_student_age()
-                    if rows:
-                        utils.display_data(['Average Student Age'], rows)
+                    if rows is not None:
+                        utils.display_metric('Average Student Age', rows)
                     else:
                         print("No students found")
 
                 elif choice == "15":
                     rows = queries.get_youngest_student_age()
-                    if rows:
-                        utils.display_data(['Youngest Candidate Age'], rows)
+                    if rows is not None:
+                        utils.display_metric('Youngest Candidate Age', rows)
                     else:
                         print("No students found")
 
                 elif choice == "16":
                     rows = queries.get_oldest_student_age()
-                    if rows:
-                        utils.display_data(['Oldest Candidate Age'], rows)
+                    if rows is not None:
+                        utils.display_metric('Oldest Candidate Age', rows)
                     else:
                         print("No students found")
 
@@ -294,8 +294,8 @@ while True:
 
                 elif choice == "10":
                     rows = queries.get_total_companies()
-                    if rows:
-                        utils.display_data(['Total Companies Registered'], rows)
+                    if rows is not None:
+                        utils.display_metric('Total Companies Registered', rows)  # 🚀 Swapped
                     else:
                         print("No metrics available")
 
@@ -458,18 +458,18 @@ while True:
 
                 elif choice == "12":
                     rows = queries.get_total_jobs()
-                    if rows:
-                        utils.display_data(['Total Active Jobs Available'], rows)
+                    if rows is not None:
+                        utils.display_metric('Total Active Jobs Available', rows)  # 🚀 Swapped
                     else:
                         print("No metrics available")
 
                 elif choice == "13":
                     rows = queries.get_average_job_salary()
-                    if rows:
-                        utils.display_data(['Average Offered Salary'], rows)
+                    if rows is not None:
+                        utils.display_metric('Average Offered Salary', rows)  # 🚀 Swapped
                     else:
                         print("No metrics available")
-
+                        
                 elif choice == "14":
                     rows = queries.get_highest_paying_job()
                     if rows:
@@ -610,8 +610,8 @@ while True:
 
                 elif choice == "10":
                     rows = queries.get_total_applications()
-                    if rows:
-                        utils.display_data(['Total System Applications'], rows)
+                    if rows is not None:
+                        utils.display_metric('Total System Applications', rows)
                     else:
                         print("No metrics available")
 
@@ -652,7 +652,7 @@ while True:
                 4. View Total Job Openings Per Company
                 5. View Total Applications Received Per Company
                 6. View Top Company by Total Applications Received
-                7. View Highest Paying Corporate Profiles (By Average Salary)
+                7. View Highest Paying Corporate Profile (By Average Salary)
                 8. View International Student Applications (Cross-Border Talent)
 
                 ---------- JOB MARKET INSIGHTS ----------
