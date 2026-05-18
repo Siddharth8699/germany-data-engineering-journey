@@ -20,7 +20,7 @@
 
 import psycopg2 
 from db_connect import get_connection
-from utils import format_numeric_result
+from utils import format_numeric_result, validate_schema_structure, get_table_display_column
 
 
 # ========================================================================================
@@ -76,10 +76,10 @@ def _get_all_records(table_name):
     return _execute_query_secure(query)
 
 
-def _check_entity_exists(table_name, student_id):
+def _check_entity_exists(table_name, id):
     
         query = f"select 1 from {table_name} where id = %s"
-        params = (student_id,)
+        params = (id,)
         result =  _execute_query_secure(query, params, fetch = "fetchone")
         return result is not None
 
@@ -91,7 +91,7 @@ def _search_entity_by_feature(table_name, feature_column, feature_value, exact_m
     
     if exact_match:
         query = f"select * from {table_name} where {feature_column} = %s order by id"
-        params = ({feature_value},)
+        params = (feature_value,)
 
     else:
         query = f"select * from {table_name} where {feature_column} ILIKE %s order by id"
@@ -109,6 +109,7 @@ def _get_entity_sorted_by_feature(table_name, feature_column, ascending=True):
     result = _execute_query_secure(query)
     return result if result else []
 
+
 def _get_entity_by_comparison(table_name, feature_column, operator, threshold_value):
 
     query = f"select * from {table_name} where {feature_column} {operator} %s order by {feature_column}"
@@ -116,12 +117,14 @@ def _get_entity_by_comparison(table_name, feature_column, operator, threshold_va
     result = _execute_query_secure(query, params)
     return result if result else []
 
+
 def _get_entity_by_range(table_name, feature_column, min_number, max_number):
     
     query = f"select * from {table_name} where {feature_column} between %s and %s order by {feature_column}"
     params = (min_number, max_number)
     result = _execute_query_secure(query, params)
     return result if result else []
+
 
 def _get_entity_scalar_aggregate(table_name, aggregate_function, aggregate_column):
     
@@ -135,6 +138,7 @@ def _get_entity_scalar_aggregate(table_name, aggregate_function, aggregate_colum
         
     return 0
     
+
 def _get_entity_aggregate_breakdown(table_name, aggregate_function, column_name, grouped_column):
     
     query = f"select {grouped_column}, {aggregate_function}({column_name}) from {table_name} group by {grouped_column}"
@@ -151,15 +155,56 @@ def _get_entity_aggregate_breakdown(table_name, aggregate_function, column_name,
     # Example: zip(['HR', 'IT'], [25, 30]) -> {'HR': 25, 'IT': 30}
     return [[group, num] for group, num in zip(group_names, clean_numbers)]
 
+
 def delete_record_by_id(table_name, id):
 
     query = f"delete from {table_name} where id = %s returning *"
     params = (id, )
     result = _execute_query_secure(query, params)
     return result if result else []
-        
 
+#practise
+def get_extreme_records_matrix(table_name, target_column, order_direction="DESC", limit_count=1):
+    """
+    Pure abstract executor to pull Top-N whole rows dynamically.
+    """
+    # 1. Run the imported check from utils
+    validate_schema_structure(table_name, target_column)
+    
+    # 2. Sanitize options
+    clean_direction = "ASC" if order_direction.upper() == "ASC" else "DESC"
+    try:
+        limit_count = max(1, int(limit_count))
+    except (ValueError, TypeError):
+        limit_count = 1
 
+    # 3. Build and execute query
+    query = f"""
+        SELECT * FROM {table_name} 
+        ORDER BY {target_column} {clean_direction} 
+        LIMIT %s
+    """
+    
+    result = _execute_query_secure(query, params=(limit_count,), fetch="fetchall")
+    return [list(row) for row in result] if result else []
+
+#practise
+def get_table_lookup_list(table_name):
+    """
+    Pure abstract lookup executor. Automatically detects descriptive columns 
+    and returns a clean list of (id, display_name) for UI dropdown components.
+    """
+    # 1. Validate the table and fetch its specific display column name
+    display_column = get_table_display_column(table_name)
+    
+    # 2. Construct the query using the verified safe structural values
+    # It dynamically becomes: SELECT id, title FROM jobs ORDER BY title ASC
+    query = f"SELECT id, {display_column} FROM {table_name} ORDER BY {display_column} ASC"
+    
+    # 3. Route to the secure engine (No dynamic parameters needed here since structure is whitelisted)
+    result = _execute_query_secure(query, params=None, fetch="fetchall")
+    
+    return result if result else []
 
 
 # =========================
@@ -171,15 +216,12 @@ def get_all_students():
     return _get_all_records("students")
 
 
-
 def insert_student(name, country, age):
     query = '''INSERT INTO students(name, country, age)
             VALUES (%s, %s, %s) returning *'''
     params = (name, country, age)
     result = _execute_query_secure(query, params)
     return result if result else []
-        
-
         
 
 def update_student(name, country, age, student_id):
@@ -192,16 +234,14 @@ def update_student(name, country, age, student_id):
     params = (name, country, age, student_id)
     result = _execute_query_secure(query, params)
     return result if result else []
-        
-
-
-
-def delete_student(student_id):
-    return delete_record_by_id("students", student_id)
 
 
 def student_exists(student_id):
     return _check_entity_exists("students", student_id)
+
+
+def delete_student(student_id):
+    return delete_record_by_id("students", student_id)
 
 
 def search_students_by_country(country_name):
@@ -247,7 +287,6 @@ def get_average_student_age():
     return _get_entity_scalar_aggregate("students", "avg", "age")
 
 
-
 def get_oldest_student_age():
     return _get_entity_scalar_aggregate("students", "max", "age")
 
@@ -272,863 +311,157 @@ def get_average_student_age_by_country():
 
 
 def get_all_companies():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "SELECT * FROM companies order by id"
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        return rows
-
-    except psycopg2.Error as e:
-        print("Error while fetching companies")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_all_records()
 
 
 def insert_company(company_name, country, industry):
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''INSERT INTO companies(company_name, country, industry)
+    query = '''INSERT INTO companies(company_name, country, industry)
                 VALUES (%s, %s, %s) returning *'''
-        cur.execute(query, (company_name, country, industry))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while inserting companies")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    params = (company_name, country, industry)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def update_company(company_name, country, industry, company_id):
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''update companies
+    query = '''update companies
                 set company_name = %s,
                 country = %s,
                 industry = %s
                 where id = %s returning *'''
-        cur.execute(query,(company_name, country, industry, company_id))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while updating companies")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    params = (company_name, country, industry, company_id)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def company_exists(company_id):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies where id = %s"
-        cur.execute(query,(company_id,))
-        student = cur.fetchone()
-
-        if student is None:
-            return False
-        
-        else:
-            return True
-        
-    except psycopg2.Error as e:
-        print("Error while checking company existence")
-        print(e)
-        return False
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _check_entity_exists("companies", company_id)
 
 
 def delete_company(company_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''delete from companies
-                    where id = %s returning *'''
-        cur.execute(query,(company_id,))
-        
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while deleting companies")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return delete_record_by_id("companies", company_id)
 
 
 def search_companies_by_name(company_name):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies where company_name ILIKE %s order by id"
-        search_name = f"%{company_name}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
+    return _search_entity_by_feature("companies", "company_name", company_name, False)
     
-    except psycopg2.Error as e:
-        print("Error while searching companies by name")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
 
 def search_companies_by_country(country):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies where country ILIKE %s order by id"
-        search_country = f"%{country}%"
-        cur.execute(query,(search_country,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching companies by country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _search_entity_by_feature("companies", "country", country, False)
 
 
 def search_companies_by_industry(industry):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies where industry ILIKE %s order by id"
-        search_industry = f"%{industry}%"
-        cur.execute(query,(search_industry,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching companies by industry")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _search_entity_by_feature("companies", "industry", industry, False)
 
 
 def get_companies_sorted_by_name():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies order by company_name"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting companies by name")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_sorted_by_feature("companies", "company_name")
 
 
 def get_companies_sorted_by_country():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from companies order by country"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting companies by country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_sorted_by_feature("companies", "country")
 
 
 def get_total_companies():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select count(*) from companies"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating total companies")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_scalar_aggregate("companies", "count", "*")
 
 
 def get_company_count_by_country():
+    return _get_entity_aggregate_breakdown("companies", "count","*", "country" )
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select country, count(*) from companies group by country"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating companies per country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
 def get_company_count_by_industry():
+    return _get_entity_aggregate_breakdown("companies", "count","*", "industry")
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select industry, count(*) from companies group by industry"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating companies per industry")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
 
 # =========================
 # JOBS QUERIES
 # =========================
 
+
+
 def get_all_jobs():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "SELECT * FROM jobs order by id"
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        return rows
-
-    except psycopg2.Error as e:
-        print("Error while fetching jobs")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_all_records("jobs")
 
 
 def insert_job(title, salary, location, company_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''INSERT INTO jobs(title, salary, location, company_id)
-                VALUES (%s, %s, %s, %s) returning *'''
-        cur.execute(query, (title, salary, location, company_id))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
     
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while inserting jobs")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    query = '''INSERT INTO jobs(title, salary, location, company_id)
+            VALUES (%s, %s, %s, %s) returning *'''
+    params = (title, salary, location, company_id)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def get_company_ids_and_names():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select id, company_name from companies order by id'''
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while fetching companies id and name")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return get_table_display_column("companies")
 
 
 def job_exists(job_id):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs where id = %s"
-        cur.execute(query,(job_id,))
-        student = cur.fetchone()
-
-        if student is None:
-            return False
-        
-        else:
-            return True
-        
-    except psycopg2.Error as e:
-        print("Error while checking job existence")
-        print(e)
-        return False
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _check_entity_exists("jobs", job_id)
 
 
 def update_job(title, salary, location, company_id, job_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''update jobs
-                set title = %s,
-                salary = %s,
-                location = %s,
-                company_id = %s
-                where id = %s returning *'''
-        cur.execute(query,(title, salary, location, company_id, job_id))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while updating jobs")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = '''update jobs
+            set title = %s,
+            salary = %s,
+            location = %s,
+            company_id = %s
+            where id = %s returning *'''
+    params = (title, salary, location, company_id, job_id)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def delete_job(job_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''delete from jobs
-                    where id = %s returning *'''
-        cur.execute(query,(job_id,))
-        
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while deleting jobs")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return delete_record_by_id("jobs", job_id)
 
 
 def search_jobs_by_title(title):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs where title ILIKE %s order by id"
-        search_name = f"%{title}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching jobs by title")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _search_entity_by_feature("jobs", "title", title, False)
 
 
 def search_jobs_by_location(location):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs where location ILIKE %s order by id"
-        search_name = f"%{location}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching jobs by location")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _search_entity_by_feature("jobs", "location", location, False)
 
 
 def get_jobs_with_salary_above(salary):
-
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs where salary > %s order by salary"
-        cur.execute(query,(salary,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching jobs with salary above threshold")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_by_comparison("jobs", "salary", ">", salary)
 
 
 def get_jobs_between_salaries(min_salary,max_salary):
-
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs where salary between %s and %s order by salary"
-        cur.execute(query,(min_salary, max_salary))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching salary in between parameters")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_by_range("jobs", "salary", min_salary, max_salary)
 
 
 def get_jobs_sorted_by_salary_asc():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs order by salary asc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting jobs by salary increasingly")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_sorted_by_feature("jobs","salary")
 
 
 def get_jobs_sorted_by_salary_desc():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs order by salary desc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting jobs by salary decreasingly")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_sorted_by_feature("jobs","salary", False)
 
 
 def get_jobs_sorted_by_title():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs order by title"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting jobs by title")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_sorted_by_feature("jobs","title")
 
 
 def get_total_jobs():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select count(*) from jobs"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating total jobs")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_scalar_aggregate("jobs", "count", "*")
 
 
 def get_average_job_salary():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select round(avg(salary), 2) from jobs"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0.0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating average salary job")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_scalar_aggregate("jobs", "avg", "salary")
 
 
 def get_highest_paying_job():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs order by salary desc limit 1"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating highest salary job")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return get_extreme_records_matrix("jobs", "salary")
 
 
 def get_lowest_paying_job():
+        return get_extreme_records_matrix("jobs", "salary", "ASC")
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from jobs order by salary asc limit 1"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating lowest salary job")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
 
     
@@ -1137,421 +470,71 @@ def get_lowest_paying_job():
 # =========================
 
 
+
 def get_all_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "SELECT * FROM applications order by id"
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        return rows
-
-    except psycopg2.Error as e:
-        print("Error while fetching applications")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_all_records()
 
 
 def insert_application(student_id, job_id, application_date, status):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''INSERT INTO applications(student_id, job_id, application_date, status)
-                VALUES (%s, %s, %s, %s) returning *'''
-        cur.execute(query, (student_id, job_id, application_date, status))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while inserting applications")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = '''INSERT INTO applications(student_id, job_id, application_date, status)
+            VALUES (%s, %s, %s, %s) returning *'''
+    params = (student_id, job_id, application_date, status)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def get_student_ids_and_names():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select id, name from students order by id'''
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while fetching students id and name")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return get_table_display_column("students")
 
 
 def get_job_ids_and_names():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select id, title from jobs order by id'''
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while fetching jobs id and name")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return get_table_display_column("jobs")
 
 
 def update_application(application_date, status, application_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''update applications
+    query = '''update applications
                 set application_date = %s,
                 status = %s
                 where id = %s returning *'''
-        cur.execute(query,(application_date, status, application_id))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while updating applications")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    params = (application_date, status, application_id)
+    result = _execute_query_secure(query, params)
+    return result if result else []
 
 
 def application_exists(application_id):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications where id = %s"
-        cur.execute(query,(application_id,))
-        student = cur.fetchone()
-
-        if student is None:
-            return False
-        
-        else:
-            return True
-        
-    except psycopg2.Error as e:
-        print("Error while checking application existence")
-        print(e)
-        return False
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _check_entity_exists("applications", application_id)
 
 
 def delete_application(application_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''delete from applications
-                    where id = %s returning *'''
-        cur.execute(query,(application_id,))
-        
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while deleting applications")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return delete_record_by_id("applications", application_id)
 
 
 def search_applications_by_status(status):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications where status ILIKE %s order by id"
-        search_name = f"%{status}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching applications by status")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _search_entity_by_feature("applications", "status", status)
 
 
 def search_applications_by_student_id(student_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications where student_id = %s order by id"
-        cur.execute(query,(student_id,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching applications by student id")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _search_entity_by_feature("applications", "student_id", student_id)
 
 
 def search_applications_by_job_id(job_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications where job_id = %s order by id"
-        cur.execute(query,(job_id,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching applications by job id")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _search_entity_by_feature("applications", "job_id", job_id)
 
 
 def get_applications_sorted_by_date():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications order by application_date asc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting applications by application_date")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_sorted_by_feature("applications", "application_date")
 
 
 def get_applications_sorted_by_status():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from applications order by status asc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting applications by status")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    return _get_entity_sorted_by_feature("applications", "status")
 
 
 def get_total_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select count(*) from applications"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating total applications")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
+    return _get_entity_scalar_aggregate("applications", "count", "*")
 
 
 def get_application_count_by_status():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select status, count(*) as number_of_applications from applications group by status order by status"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating applications by status")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_aggregate_breakdown("applications", "count", "*", "status")
 
 
 # =========================

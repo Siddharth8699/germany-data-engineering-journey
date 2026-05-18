@@ -316,7 +316,7 @@ def display_metric(label, value):
 
 
 
-
+# practise it once or write by myself later.
 def format_numeric_result(raw_values):
     """
     Takes a list of numbers. If ANY number has a real decimal, rounds ALL to 2 decimals.
@@ -361,3 +361,52 @@ def format_numeric_result(raw_values):
             formatted_values.append(val) # Send text or None back cleanly
             
     return formatted_values
+
+
+
+def validate_schema_structure(table_name, target_column=None):
+    """
+    Universal structural gatekeeper based on your explicit database schema.
+    Validates both table and column boundaries before hitting PostgreSQL.
+    """
+    # The absolute truth of YOUR database architecture
+    MASTER_SCHEMA = {
+        "companies": ["id", "company_name", "country", "industry"],
+        "students": ["id", "name", "country", "age"],
+        "jobs": ["id", "title", "salary", "location", "company_id"],
+        "applications": ["id", "student_id", "job_id", "application_date", "status"]
+    }
+    
+    # Check 1: Prevent unauthorized or typo-ridden table names
+    if table_name not in MASTER_SCHEMA:
+        raise ValueError(f"Database Security Error: Unauthorized table target '{table_name}'.")
+        
+    # Check 2: Prevent unauthorized or typo-ridden column names (if passed)
+    if target_column and target_column not in MASTER_SCHEMA[table_name]:
+        raise ValueError(
+            f"Database Schema Error: The '{table_name}' table does not contain a '{target_column}' column."
+        )
+    
+
+
+# utils.py
+
+def get_table_display_column(table_name):
+    """
+    Validates lookup capability and returns the exact text/display 
+    column name based on the user's specific database schema.
+    """
+    # Maps the valid lookup tables to their exact descriptive column name
+    LOOKUP_MAP = {
+        "students": "name",
+        "companies": "company_name",
+        "jobs": "title"
+    }
+    
+    if table_name not in LOOKUP_MAP:
+        raise ValueError(
+            f"Database Security Error: Table '{table_name}' is either invalid "
+            f"or unauthorized for dropdown lookup extraction."
+        )
+        
+    return LOOKUP_MAP[table_name]
