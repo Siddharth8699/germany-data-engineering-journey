@@ -5,6 +5,8 @@
 import os
 import sys
 from datetime import datetime, date
+from decimal import Decimal
+
 # (Whatever other libraries or modules you are importing)
 
 
@@ -210,6 +212,7 @@ def _execute_abstract_input_workflow(prompt_msg, cast_callback, validation_callb
             transformed_data = cast_callback(raw_string)
         except Exception as error_context:
             print(f"Invalid format: {error_context}")
+            print("Invalid entry. Please enter a valid number or text format.")
             continue
             
         # Step 3: Business Rule Evaluation
@@ -310,3 +313,51 @@ def display_metric(label, value):
     """Safely wraps single summary values into a table output grid."""
     safe_value = value if value is not None else 0
     display_data([label], [[safe_value]])
+
+
+
+
+def format_numeric_result(raw_values):
+    """
+    Takes a list of numbers. If ANY number has a real decimal, rounds ALL to 2 decimals.
+    Otherwise, drops the .0 and converts ALL to clean integers.
+    """
+    has_decimals_anywhere = False
+    cleaned_floats = []
+    
+    # Step 1: Pre-clean everything to actual numbers and look for hidden decimals
+    for val in raw_values:
+        if val is None:
+            cleaned_floats.append(None)
+            continue
+            
+        # If the DB returned a string like "24.5333", convert it to a float
+        if isinstance(val, (str, Decimal)):
+            try:
+                val = float(val)
+            except (ValueError, TypeError):
+                cleaned_floats.append(val) # Keep text as-is if it can't convert
+                continue
+        
+        if isinstance(val, (int, float)):
+            cleaned_floats.append(val)
+            # Check if it has an active remainder after the decimal
+            if isinstance(val, float) and not val.is_integer():
+                has_decimals_anywhere = True
+        else:
+            cleaned_floats.append(val)
+
+    # Step 2: Force clean rendering across the whole dataset
+    formatted_values = []
+    for val in cleaned_floats:
+        if isinstance(val, (int, float)):
+            if has_decimals_anywhere:
+                # Force round to exactly 2 decimal places
+                formatted_values.append(round(float(val), 2))
+            else:
+                # Strip trailing .0 and leave it as a clean whole integer
+                formatted_values.append(int(val))
+        else:
+            formatted_values.append(val) # Send text or None back cleanly
+            
+    return formatted_values

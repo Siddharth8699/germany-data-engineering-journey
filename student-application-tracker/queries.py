@@ -1,5 +1,165 @@
-import psycopg2
+# ========================================================================================
+# ARCHITECTURAL EVOLUTION OF DATA ACCESS LAYERS
+# ========================================================================================
+#
+# PERSISTED ARCHITECTURE PHASE TIMELINE:
+#
+# ─── PHASE 1: DIRECT MONOLITHIC QUERIES (Historical Legacy) ─────────────────────────────
+#  • Implementation: Every function manually opened its own connection, built a 
+#    dedicated cursor, executed raw SQL, committed, and managed its own close/cleanup.
+#  • Discoveries & Flaws: Massive boilerplate repetition across 30+ functions. 
+#    High risk of leaked connections, unhandled rollbacks, and fragile maintenance.
+#
+# ─── PHASE 2: ISOLATED ABSTRACT EXECUTION ENGINE (Current Production Grid) ──────────────
+#  • Implementation: Consolidates connection lifecycles, statement preparation, and 
+#    error boundaries into a singular, trusted execution channel (`_execute_query_secure`).
+#  • Breakthroughs: Enforces strict connection teardowns via try/except/finally blocks,
+#    natively implements atomic transaction rollbacks, and eliminates redundant code.
+#    Decouples raw query transport from computational formatting wrappers.
+# ========================================================================================
+
+import psycopg2 
 from db_connect import get_connection
+from utils import format_numeric_result
+
+
+# ========================================================================================
+# GENERATION 2 — ABSTRACT DATABASE EXECUTION ENGINE (MASTER TRANSPORT)
+# Core Infrastructure Layer: Responsible for connection state preservation, transaction
+# integrity, safe cursor extraction, and structural exception containment.
+# ========================================================================================
+
+
+def _execute_query_secure(query, params = None, fetch="fetchall"):
+    """
+    Core Database Engine. Centralizes connection lifecycle, transactions, and error boundaries.
+    Defaults to 'fetchall' data retrieval for optimal performance across read-heavy workflows.
+    """
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(query, params)
+        conn.commit()
+
+        if fetch:
+            rows = getattr(cur, fetch)()
+            return rows
+        
+        return None
+    
+    except psycopg2.Error as e:
+        if conn:
+            conn.rollback()
+        print(f"Error while executing query: {e}")
+        return None if fetch == "fetchone" else []  
+      
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+# =====================================================================
+# SYSTEM GENERIC PERSISTENCE WORKFLOWS
+# Core utilities for dynamic table reads, global entity verifications, 
+# and master row-count checks across any database table.
+# =====================================================================
+
+def _get_all_records(table_name):
+
+    query = f"select * from {table_name} order by id"
+    return _execute_query_secure(query)
+
+
+def _check_entity_exists(table_name, student_id):
+    
+        query = f"select 1 from {table_name} where id = %s"
+        params = (student_id,)
+        result =  _execute_query_secure(query, params, fetch = "fetchone")
+        return result is not None
+
+
+def _search_entity_by_feature(table_name, feature_column, feature_value, exact_match=True):
+
+    if not feature_value:
+        return []
+    
+    if exact_match:
+        query = f"select * from {table_name} where {feature_column} = %s order by id"
+        params = ({feature_value},)
+
+    else:
+        query = f"select * from {table_name} where {feature_column} ILIKE %s order by id"
+        params = (f"%{feature_value}%",)
+
+    
+    result = _execute_query_secure(query, params)
+    return result if result else []
+
+
+def _get_entity_sorted_by_feature(table_name, feature_column, ascending=True):
+    
+    direction = "ASC" if ascending else "DESC"
+    query = f"select * from {table_name} order by {feature_column} {direction}"
+    result = _execute_query_secure(query)
+    return result if result else []
+
+def _get_entity_by_comparison(table_name, feature_column, operator, threshold_value):
+
+    query = f"select * from {table_name} where {feature_column} {operator} %s order by {feature_column}"
+    params = (threshold_value,)
+    result = _execute_query_secure(query, params)
+    return result if result else []
+
+def _get_entity_by_range(table_name, feature_column, min_number, max_number):
+    
+    query = f"select * from {table_name} where {feature_column} between %s and %s order by {feature_column}"
+    params = (min_number, max_number)
+    result = _execute_query_secure(query, params)
+    return result if result else []
+
+def _get_entity_scalar_aggregate(table_name, aggregate_function, aggregate_column):
+    
+    query = f"select {aggregate_function}({aggregate_column}) from {table_name}"
+    result = _execute_query_secure(query, fetch = "fetchone")
+    if result and result[0] is not None:
+
+        raw_value = result[0]
+        clean_value = format_numeric_result([raw_value])[0]
+        return clean_value
+        
+    return 0
+    
+def _get_entity_aggregate_breakdown(table_name, aggregate_function, column_name, grouped_column):
+    
+    query = f"select {grouped_column}, {aggregate_function}({column_name}) from {table_name} group by {grouped_column}"
+    result = _execute_query_secure(query)
+    if not result:
+        return []
+        
+    group_names = [row[0] for row in result]
+    raw_numbers = [row[1] for row in result]
+    
+    clean_numbers = format_numeric_result(raw_numbers)
+    
+    # Zip the group names and cleaned numbers back together into a beautiful dictionary
+    # Example: zip(['HR', 'IT'], [25, 30]) -> {'HR': 25, 'IT': 30}
+    return [[group, num] for group, num in zip(group_names, clean_numbers)]
+
+def delete_record_by_id(table_name, id):
+
+    query = f"delete from {table_name} where id = %s returning *"
+    params = (id, )
+    result = _execute_query_secure(query, params)
+    return result if result else []
+        
+
+
 
 
 # =========================
@@ -8,530 +168,102 @@ from db_connect import get_connection
 
 
 def get_all_students():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "SELECT * FROM students order by id"
-        cur.execute(query)
-
-        rows = cur.fetchall()
-        return rows
-
-    except psycopg2.Error as e:
-        print("Error while fetching students")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_all_records("students")
 
 
 
 def insert_student(name, country, age):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''INSERT INTO students(name, country, age)
-                VALUES (%s, %s, %s) returning *'''
-        cur.execute(query, (name, country, age))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-    
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while inserting students")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    query = '''INSERT INTO students(name, country, age)
+            VALUES (%s, %s, %s) returning *'''
+    params = (name, country, age)
+    result = _execute_query_secure(query, params)
+    return result if result else []
+        
 
         
 
 def update_student(name, country, age, student_id):
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''update students
+    query = '''update students
                 set name = %s,
                 country = %s,
                 age = %s
                 where id = %s returning *'''
-        cur.execute(query,(name, country, age, student_id))
-
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while updating students")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    params = (name, country, age, student_id)
+    result = _execute_query_secure(query, params)
+    return result if result else []
+        
 
 
 
 def delete_student(student_id):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''delete from students
-                    where id = %s returning *'''
-        cur.execute(query,(student_id,))
-        
-        rows = cur.fetchall()
-        conn.commit()
-        return rows
-
-    except psycopg2.Error as e:
-
-        if conn:
-            conn.rollback()
-
-        print("Error while deleting students")
-        print(e)
-        return []
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return delete_record_by_id("students", student_id)
 
 
 def student_exists(student_id):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students where id = %s"
-        cur.execute(query,(student_id,))
-        student = cur.fetchone()
-
-        if student is None:
-            return False
-        
-        else:
-            return True
-        
-    except psycopg2.Error as e:
-        print("Error while checking student existence")
-        print(e)
-        return False
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _check_entity_exists("students", student_id)
 
 
-def search_students_by_country(country):
-
-    conn = None
-    cur = None
-
-    try:
-
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students where country ILIKE %s order by id"
-        search_name = f"%{country}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching students by country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+def search_students_by_country(country_name):
+    return _search_entity_by_feature("students", "country", country_name, False)
 
 
 def search_students_by_name(name):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students where name ILIKE %s order by id"
-        search_name = f"%{name}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching students by name")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _search_entity_by_feature("students", "name", name, False)
 
 
 def get_students_older_than(age):
-
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students where age > %s order by age"
-        cur.execute(query,(age,))
-        rows = cur.fetchall()
-        return rows
+    return _get_entity_by_comparison("students", "age", ">", age)
     
-    except psycopg2.Error as e:
-        print("Error while searching students by age threshold")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    
 
 def get_students_between_ages(min_age,max_age):
-
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students where age between %s and %s order by age"
-        cur.execute(query,(min_age,max_age))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while searching students between ages")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_by_range("students", "age", min_age, max_age)
 
 
 def get_students_sorted_by_name():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students order by name"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting students by name")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_sorted_by_feature("students", "name")
 
 
 def get_students_sorted_by_age_asc():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students order by age asc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting students by age asc")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_sorted_by_feature("students", "age")
 
 
 def get_students_sorted_by_age_desc():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students order by age desc"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting students by age desc")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_sorted_by_feature("students", "age", False)
 
 
 def get_students_sorted_by_country_and_age():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select * from students order by country, age"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while sorting students by country,age")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    query = "select * from students order by country, age"
+    result = _execute_query_secure(query)
+    return result if result else []
 
 
 def get_total_students():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select count(*) from students"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while counting students")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_scalar_aggregate("students", "count", "*")
 
 
 def get_average_student_age():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select round(avg(age),2) from students"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0.0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating average age of students")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_scalar_aggregate("students", "avg", "age")
 
 
 
 def get_oldest_student_age():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select max(Age) from students"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating max age of students")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_scalar_aggregate("students", "max", "age")
 
 
 
 def get_youngest_student_age():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select min(Age) from students"
-        cur.execute(query)
-        rows = cur.fetchone()
-        return rows[0] if rows else 0
-    
-    except psycopg2.Error as e:
-        print("Error while calculating min age of students")
-        print(e)
-        return None
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_scalar_aggregate("students", "min", "age")
 
 
 def get_student_count_by_country():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select country, count(*) from students group by country"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating students per country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    return _get_entity_aggregate_breakdown("students", "count", "*", "country")
 
 
 def get_average_student_age_by_country():
+        return _get_entity_aggregate_breakdown("students", "avg", "age", "country")
 
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = "select country, round(avg(age), 2) AS average_age from students group by country"
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating average age of students per country")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 
 
 # =========================
@@ -2515,3 +2247,8 @@ def get_aged_applications():
             cur.close()
         if conn:
             conn.close()
+
+
+
+
+        

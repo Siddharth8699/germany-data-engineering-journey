@@ -19,7 +19,7 @@ while True:
         # =====================================================================
         # 1. STUDENT MANAGEMENT
         # =====================================================================
-        
+
         elif choice == "1":
             while True:
                 choice = input('''
@@ -399,7 +399,7 @@ while True:
                             print("Job not found")
 
                     elif choice == "7":
-                        salary = utils.get_clean_integer("Enter the threshold salary: ", 1)
+                        salary = utils.get_clean_integer("Enter the salary: ", 1)
                         rows = queries.get_jobs_with_salary_above(salary)
                         if rows:
                             utils.display_data(utils.JOB_HEADERS, rows)
