@@ -542,694 +542,257 @@ def get_application_count_by_status():
 # =========================
 
 
+# ==============================================================================
+# THE 5 CANONICAL RELATIONAL JOIN MATRICES (Flexible Join Components)
+# ==============================================================================
+
+# Matrix 1: Students -> Applications
+STUDENT_TO_APPLICATION_MATRIX = """
+    JOIN applications as a ON s.id = a.student_id
+"""
+
+# Matrix 2: Jobs -> Companies
+JOB_TO_COMPANY_MATRIX = """
+    JOIN companies as c ON j.company_id = c.id
+"""
+
+# Matrix 3: Students -> Applications -> Jobs
+STUDENT_TO_JOB_MATRIX = """
+    JOIN applications as a ON s.id = a.student_id
+    JOIN jobs as j         ON a.job_id = j.id
+"""
+
+# Matrix 4: The Analytics Bridge (Applications -> Jobs -> Companies)
+APPLICATION_TO_COMPANY_MATRIX = """
+    JOIN jobs as j      ON a.job_id = j.id
+    JOIN companies as c ON j.company_id = c.id
+"""
+
+# Matrix 5: The Full Path (Students -> Applications -> Jobs -> Companies)
+STUDENT_TO_COMPANY_MATRIX = """
+    JOIN applications as a ON s.id = a.student_id
+    JOIN jobs as j         ON a.job_id = j.id
+    JOIN companies as c    ON j.company_id = c.id
+"""
+
+
+
+
+# ==============================================================================
+# ANALYTICAL REPORTING LAYER FUNCTIONS
+# ==============================================================================
 
 def get_students_application_job_and_company():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.name, j.title, c.company_name, a.status from students as s
-        join applications as a on s.id = a.student_id
-        join jobs as j on a.job_id = j.id
-        join companies as c on j.company_id = c.id'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting students application job name and company details")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.name, j.title, c.company_name, a.status from students as s
+            {STUDENT_TO_COMPANY_MATRIX}"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def search_students_applied_to_company(company_name):
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.name, c.company_name from students as s
-        join applications as a on s.id = a.student_id
-        join jobs as j on a.job_id = j.id
-        join companies as c on j.company_id = c.id
-        where c.company_name ILIKE %s '''
-        search_name = f"%{company_name}%"
-        cur.execute(query,(search_name,))
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating student applied to a particular company")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.name, c.company_name from students as s
+            {STUDENT_TO_COMPANY_MATRIX}
+            where c.company_name ILIKE %s"""
+    params = (f"%{company_name}%",)
+    result = _execute_query_secure(query, params, fetch="fetchall")
+    return result if result else []
 
 
 def get_students_with_multiple_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.id, s.name, count(*) as no_of_applications from students as s
-        join applications as a on s.id = a.student_id
-        group by s.id, s.name
-        having count(*) > 1
-        order by s.id'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while fetching students with multiple applications")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.id, s.name, count(*) as no_of_applications from students as s
+            {STUDENT_TO_APPLICATION_MATRIX}
+            group by s.id, s.name
+            having count(*) > 1
+            order by s.id"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_job_openings_per_company():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.id, c.company_name, count(*) as job_openings from jobs as j
-                join companies  as c on j.company_id = c.id
-                group by c.id, c.company_name
-                order by c.id'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating jobs opening per company")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.id, c.company_name, count(*) as job_openings from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            group by c.id, c.company_name
+            order by c.id"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_application_count_per_company():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.id, c.company_name, count(*) as no_of_applications from applications as a
-                join jobs as j on a.job_id = j.id
-                join companies as c on j.company_id = c.id
-                group by c.id, c.company_name'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating applications volume per company")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.id, c.company_name, count(*) as no_of_applications from applications as a
+            {APPLICATION_TO_COMPANY_MATRIX}
+            group by c.id, c.company_name"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_company_with_highest_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.id, c.company_name, count(*) as no_of_applications from applications as a
-                join jobs as j on a.job_id = j.id
-                join companies as c on j.company_id = c.id
-                group by c.id, c.company_name
-                order by count(*) desc
-                limit 1'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating company with highest applications")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.id, c.company_name, count(*) as no_of_applications from applications as a
+            {APPLICATION_TO_COMPANY_MATRIX}
+            group by c.id, c.company_name
+            order by count(*) desc
+            limit 1"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_company_with_highest_average_salary():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.id, c.company_name, round(avg(salary), 2) as average_salary from jobs as j
-                join companies as c on j.company_id = c.id
-                group by c.id, c.company_name
-                order by average_salary desc
-                limit 1'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating company with highest average salary")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.id, c.company_name, round(avg(salary), 2) as average_salary from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            group by c.id, c.company_name
+            order by average_salary desc
+            limit 1"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_company_open_to_international_students():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.name, s.country, c.company_name, c.country, a.status from students as s
-                join applications as a on s.id = a.student_id
-                join jobs as j on a.job_id = j.id
-                join companies as c on j.company_id = c.id
-                where s.country <> c.country
-                order by s.name'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating company with international students")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.name, s.country, c.company_name, c.country, a.status from students as s
+            {STUDENT_TO_COMPANY_MATRIX}
+            where s.country <> c.country
+            order by s.name"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_all_jobs_info():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select j.id, j.title, c.company_name, c.country, j.salary from jobs as j
-        join companies as c on j.company_id = c.id
-        order by j.id'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting all jobs metadata")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select j.id, j.title, c.company_name, c.country, j.salary from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            order by j.id"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_highest_5_paying_jobs():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select j.id, j.title, c.company_name, c.country, j.salary from jobs as j
-        join companies as c on j.company_id = c.id
-        order by j.salary desc
-        limit 5'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting highest 5 paying jobs")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select j.id, j.title, c.company_name, c.country, j.salary from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            order by j.salary desc
+            limit 5"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_average_salary_by_industry():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.industry, round(avg(j.salary), 2) as average_salary from jobs as j
-                join companies as c on j.company_id = c.id
-                group by c.industry
-                order by average_salary'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while calculating avg salary by industry")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.industry, round(avg(j.salary), 2) as average_salary from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            group by c.industry
+            order by average_salary"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_job_postings_with_no_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select j.id, j.title, c.company_name from jobs as j
-                jOIN companies c ON j.company_id = c.id
-                left join applications as a on j.id = a.job_id
-                where a.job_id is null'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting job postings with no applications")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()     
-
+    query = f"""select j.id, j.title, c.company_name from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            left join applications as a on j.id = a.job_id
+            where a.job_id is null"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_job_postings_with_most_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select j.id, j.title, count(*) as no_of_applications from jobs as j
-                join companies as c on j.company_id = c.id
-                LEFT JOIN applications as a ON j.id = a.job_id
-                group by j.id, j.title
-                order by no_of_applications desc
-                limit 10'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting job postings with most applications")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()   
-
+    query = f"""select j.id, j.title, count(*) as no_of_applications from jobs as j
+            {JOB_TO_COMPANY_MATRIX}
+            LEFT JOIN applications as a ON j.id = a.job_id
+            group by j.id, j.title
+            order by no_of_applications desc
+            limit 10"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_interview_rate_per_company():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select *, round((interview_scheduled_count * 100/total_applications), 2) as interview_rate 
-                from (
-                    select c.id, c.company_name, count(*) as total_applications, 
-                    sum(
-                        case
-                            when a.status ILIKE '%interview%'
-                            then 1
-                            else 0
-                        end
-                    ) as interview_scheduled_count 
-                    from applications as a
-                    join jobs as j on a.job_id = j.id
-                    join companies as c on j.company_id = c.id
-                    group by c.id, c.company_name
-                    ) as company_stats'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting interview rate per company")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()   
-
+    query = f"""select *, round((interview_scheduled_count * 100/total_applications), 2) as interview_rate 
+            from (
+                select c.id, c.company_name, count(*) as total_applications, 
+                sum(
+                    case
+                        when a.status ILIKE '%interview%'
+                        then 1
+                        else 0
+                    end
+                ) as interview_scheduled_count 
+                from applications as a
+                {APPLICATION_TO_COMPANY_MATRIX}
+                group by c.id, c.company_name
+                ) as company_stats"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else [] 
 
 
 def get_number_of_rejected_applications_per_industry():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.industry, 
-                sum(
-                    case
-                        when a.status ILIKE '%rejected%'
-                        then 1
-                        else 0
-                    end                                   
-                ) as no_of_rejections 
-                from companies as c
-                join jobs as j on c.id = j.company_id
-                join applications as a on j.id = a.job_id
-                group by c.industry'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting rejections per industry")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()    
-
+    query = f"""select c.industry, 
+            sum(
+                case
+                    when a.status ILIKE '%rejected%'
+                    then 1
+                    else 0
+                end                                                   
+            ) as no_of_rejections 
+            from applications as a
+            {APPLICATION_TO_COMPANY_MATRIX}
+            group by c.industry"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []  
 
 
 def get_students_with_applications_to_multiple_companies():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.id, s.name, count(distinct c.id) as no_of_different_company from students as s
-                join applications as a on s.id = a.student_id
-                join jobs as j on a.job_id = j.id
-                join companies as c on j.company_id = c.id
-                group by s.id, s.name'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting students applying to multiple companies")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()     
-
+    query = f"""select s.id, s.name, count(distinct c.id) as no_of_different_company from students as s
+            {STUDENT_TO_COMPANY_MATRIX}
+            group by s.id, s.name"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []    
 
 
 def get_company_with_no_job_listings():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.id, c.company_name from companies as c
-                left join jobs as j on c.id = j.company_id
-                where j.id is null'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting companies with no job listings")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()  
-            
-
+    query = """select c.id, c.company_name from companies as c
+            left join jobs as j on c.id = j.company_id
+            where j.id is null"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_students_with_no_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.id, s.name from students as s
-                left join applications as a on s.id = a.student_id
-                where a.student_id is null'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting students with no applications")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.id, s.name from students as s
+            left join applications as a on s.id = a.student_id
+            where a.student_id is null"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_students_average_age_per_industry():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select c.industry, round(avg(s.age), 2) as average_age from students as s
-                join applications as a on s.id = a.student_id
-                join jobs as j on a.job_id = j.id
-                join companies as c on j.company_id = c.id
-                group by c.industry'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting average student age per industry")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select c.industry, round(avg(s.age), 2) as average_age from students as s
+            {STUDENT_TO_COMPANY_MATRIX}
+            group by c.industry"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_country_with_highest_applicants():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select s.country, count(*) as no_of_applicants from students as s
-                join applications as a on s.id = a.student_id
-                group by country
-                order by no_of_applicants desc
-                limit 1'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting country with highest applicants")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = f"""select s.country, count(*) as no_of_applicants from students as s
+            {STUDENT_TO_APPLICATION_MATRIX}
+            group by country
+            order by no_of_applicants desc
+            limit 1"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_number_of_applications_monthly():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select mon, yr, count(*) as number_of_applications
-                from
-                (select *, extract(month from application_date) as mon, extract(year from application_date) as yr from applications) as t
-                group by mon,yr'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting monthly applications volume")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
+    query = """select mon, yr, count(*) as number_of_applications
+            from
+            (select *, extract(month from application_date) as mon, extract(year from application_date) as yr from applications) as t
+            group by mon,yr"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 def get_aged_applications():
-
-    conn = None
-    cur = None
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        query = '''select *
-                from
-                (select *, (current_date - application_date) as no_of_days from applications) as t
-                where status ILIKE 'applied' and no_of_days > 14;'''
-        cur.execute(query)
-        rows = cur.fetchall()
-        return rows
-    
-    except psycopg2.Error as e:
-        print("Error while getting aged applications details")
-        print(e)
-        return []
-
-    finally:
-
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    query = """select *
+            from
+            (select *, (current_date - application_date) as no_of_days from applications) as t
+            where status ILIKE 'applied' and no_of_days > 14;"""
+    result = _execute_query_secure(query, fetch="fetchall")
+    return result if result else []
 
 
 
