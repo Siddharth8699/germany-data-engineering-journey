@@ -19,6 +19,7 @@
 # ========================================================================================
 
 import psycopg2 
+import logging
 from db_connect import get_connection
 from utils import format_numeric_result, validate_schema_structure, get_table_display_column
 
@@ -53,6 +54,9 @@ def _execute_query_secure(query, params = None, fetch="fetchall"):
     except psycopg2.Error as e:
         if conn:
             conn.rollback()
+            logging.warning("Transaction rollback executed.")
+            
+        logging.error(f"Database query failed: {e}")
         print(f"Error while executing query: {e}")
         return None if fetch == "fetchone" else []  
       
@@ -199,7 +203,7 @@ def get_table_lookup_list(table_name):
     
     # 2. Construct the query using the verified safe structural values
     # It dynamically becomes: SELECT id, title FROM jobs ORDER BY title ASC
-    query = f"SELECT id, {display_column} FROM {table_name} ORDER BY {display_column} ASC"
+    query = f"SELECT id, {display_column} FROM {table_name} ORDER BY id ASC"
     
     # 3. Route to the secure engine (No dynamic parameters needed here since structure is whitelisted)
     result = _execute_query_secure(query, params=None, fetch="fetchall")
@@ -311,7 +315,7 @@ def get_average_student_age_by_country():
 
 
 def get_all_companies():
-    return _get_all_records()
+    return _get_all_records("companies")
 
 
 def insert_company(company_name, country, industry):
@@ -396,7 +400,7 @@ def insert_job(title, salary, location, company_id):
 
 
 def get_company_ids_and_names():
-    return get_table_display_column("companies")
+    return get_table_lookup_list("companies")
 
 
 def job_exists(job_id):
@@ -472,7 +476,7 @@ def get_lowest_paying_job():
 
 
 def get_all_applications():
-    return _get_all_records()
+    return _get_all_records("applications")
 
 
 def insert_application(student_id, job_id, application_date, status):
@@ -484,11 +488,11 @@ def insert_application(student_id, job_id, application_date, status):
 
 
 def get_student_ids_and_names():
-    return get_table_display_column("students")
+    return get_table_lookup_list("students")
 
 
 def get_job_ids_and_names():
-    return get_table_display_column("jobs")
+    return get_table_lookup_list("jobs")
 
 
 def update_application(application_date, status, application_id):
@@ -510,7 +514,7 @@ def delete_application(application_id):
 
 
 def search_applications_by_status(status):
-    return _search_entity_by_feature("applications", "status", status)
+    return _search_entity_by_feature("applications", "status", status, False)
 
 
 def search_applications_by_student_id(student_id):

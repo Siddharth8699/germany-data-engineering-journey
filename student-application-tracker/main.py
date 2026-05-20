@@ -1,5 +1,9 @@
 import queries
 import utils
+import logger_config
+import logging
+
+logging.info("Application started.")
 
 while True:
     try:
@@ -58,16 +62,16 @@ while True:
                             print("No students found")
 
                     elif choice == "2":
-                        name = utils.get_clean_string("Enter the name: ")
-                        country = utils.get_clean_string("Enter the country: ")
+                        name = utils.get_clean_name("Enter the name: ")
+                        country = utils.get_corporate_string("Enter the country: ")
                         age = utils.get_clean_integer("Enter the age: ", 18)
                         rows = queries.insert_student(name, country, age)
                         utils.display_data(utils.STUDENT_HEADERS, rows)
 
                     elif choice == "3":
                         student_id = utils.get_clean_integer("Enter the student id: ", 1, queries.student_exists, "student not found")
-                        name = utils.get_clean_string("Enter the name: ")                       
-                        country = utils.get_clean_string("Enter the country: ")
+                        name = utils.get_clean_name("Enter the name: ")                       
+                        country = utils.get_corporate_string("Enter the country: ")
                         age = utils.get_clean_integer("Enter the age: ", 18)
                         rows = queries.update_student(name, country, age, student_id)
                         utils.display_data(utils.STUDENT_HEADERS, rows)
@@ -78,7 +82,7 @@ while True:
                         utils.display_data(utils.STUDENT_HEADERS, rows)
 
                     elif choice == "5":
-                        name = utils.get_clean_string("Enter the name: ")
+                        name = utils.get_clean_name("Enter the name: ")
                         rows = queries.search_students_by_name(name)
                         if rows:
                             utils.display_data(utils.STUDENT_HEADERS, rows)
@@ -86,7 +90,7 @@ while True:
                             print("No students found")
 
                     elif choice == "6":
-                        country = utils.get_clean_string("Enter the country: ")
+                        country = utils.get_corporate_string("Enter the country: ")
                         rows = queries.search_students_by_country(country)
                         if rows:
                             utils.display_data(utils.STUDENT_HEADERS, rows)
@@ -227,17 +231,17 @@ while True:
 
                     elif choice == "2":
                         # FIXED: Repaired variable names to match validation logic below
-                        company_name = utils.get_clean_string("Enter the corporate name: ")
-                        country = utils.get_clean_string("Enter the country: ")
-                        industry = utils.get_clean_string("Enter the industry sector: ")
+                        company_name = utils.get_corporate_string("Enter the corporate name: ")
+                        country = utils.get_corporate_string("Enter the country: ")
+                        industry = utils.get_corporate_string("Enter the industry sector: ")
                         rows = queries.insert_company(company_name, country, industry)
                         utils.display_data(utils.COMPANY_HEADERS, rows)
 
                     elif choice == "3":
                         company_id = utils.get_clean_integer("Enter the company id: ", 1, queries.company_exists, "company not found")
-                        company_name = utils.get_clean_string("Enter the company name: ")
-                        country = utils.get_clean_string("Enter the country: ")
-                        industry = utils.get_clean_string("Enter the industry: ")
+                        company_name = utils.get_corporate_string("Enter the company name: ")
+                        country = utils.get_corporate_string("Enter the country: ")
+                        industry = utils.get_corporate_string("Enter the industry: ")
                         rows = queries.update_company(company_name, country, industry, company_id)
                         utils.display_data(utils.COMPANY_HEADERS, rows)
 
@@ -247,7 +251,7 @@ while True:
                         utils.display_data(utils.COMPANY_HEADERS, rows)
 
                     elif choice == "5":
-                        company_name = utils.get_clean_string("Enter the company name: ")
+                        company_name = utils.get_corporate_string("Enter the company name: ")
                         rows = queries.search_companies_by_name(company_name)
                         if rows:
                             utils.display_data(utils.COMPANY_HEADERS, rows)
@@ -255,7 +259,7 @@ while True:
                             print("Company not found")
 
                     elif choice == "6":
-                        country = utils.get_clean_string("Enter the country: ")
+                        country = utils.get_corporate_string("Enter the country: ")
                         rows = queries.search_companies_by_country(country)
                         if rows:
                             utils.display_data(utils.COMPANY_HEADERS, rows)
@@ -263,7 +267,7 @@ while True:
                             print("Company not found")
 
                     elif choice == "7":
-                        industry = utils.get_clean_string("Enter the industry: ")
+                        industry = utils.get_corporate_string("Enter the industry: ")
                         rows = queries.search_companies_by_industry(industry)
                         if rows:
                             utils.display_data(utils.COMPANY_HEADERS, rows)
@@ -360,9 +364,9 @@ while True:
                         
                         company_id = utils.get_clean_integer("Enter the company id: ", 1, queries.company_exists, "company not found")
                         # FIXED: Swapped integer parsing to clean string parsing for job title structures
-                        title = utils.get_clean_string("Enter the job title: ")
+                        title = utils.get_corporate_string("Enter the job title: ")
                         salary = utils.get_clean_integer("Enter the salary: ", 1)
-                        location = utils.get_clean_string("Enter the location: ")
+                        location = utils.get_corporate_string("Enter the location: ")
                         rows = queries.insert_job(title, salary, location, company_id)
                         utils.display_data(utils.JOB_HEADERS, rows)
 
@@ -370,9 +374,9 @@ while True:
                         job_id = utils.get_clean_integer("Enter the job_id: ", 1, queries.job_exists, "job not found")
                         company_id = utils.get_clean_integer("Enter the company id: ", 1, queries.company_exists, "company not found")
                         # FIXED: Converted title entry workflow from int to text
-                        title = utils.get_clean_string("Enter the job title: ")
+                        title = utils.get_corporate_string("Enter the job title: ")
                         salary = utils.get_clean_integer("Enter the salary: ", 1)
-                        location = utils.get_clean_string("Enter the location: ")
+                        location = utils.get_corporate_string("Enter the location: ")
                         rows = queries.update_job(title, salary, location, company_id, job_id)
                         utils.display_data(utils.JOB_HEADERS, rows)
 
@@ -383,7 +387,7 @@ while True:
 
                     elif choice == "5":
                         # FIXED: Converted search parameter query pattern to match textual title fields
-                        title = utils.get_clean_string("Enter the title search sequence: ")
+                        title = utils.get_corporate_string("Enter the title search sequence: ")
                         rows = queries.search_jobs_by_title(title)
                         if rows:
                             utils.display_data(utils.JOB_HEADERS, rows)
@@ -391,7 +395,7 @@ while True:
                             print("Job not found")
 
                     elif choice == "6":
-                        location = utils.get_clean_string("Enter the location: ")
+                        location = utils.get_corporate_string("Enter the location: ")
                         rows = queries.search_jobs_by_location(location)
                         if rows:
                             utils.display_data(utils.JOB_HEADERS, rows)
@@ -521,7 +525,7 @@ while True:
                         job_id = utils.get_clean_integer("Enter the job_id: ", 1, queries.job_exists, "job not found")
 
                         application_date = utils.get_clean_date("Enter the date: ")
-                        status = utils.get_clean_string("Enter the status: ")
+                        status = utils.get_application_status("Enter the status: ")
                         rows = queries.insert_application(student_id, job_id, application_date, status)
                         utils.display_data(utils.APPLICATION_HEADERS, rows)
 
@@ -529,7 +533,7 @@ while True:
                         # FIXED: Extracted variable out from structural nested execution loops
                         application_id = utils.get_clean_integer("Enter application id: ", 1, queries.application_exists, "Application not found")
                         application_date = utils.get_clean_date("Enter the date: ")
-                        status = utils.get_clean_string("Enter the status: ")
+                        status = utils.get_application_status("Enter the status: ")
                         rows = queries.update_application(application_date, status, application_id)
                         utils.display_data(utils.APPLICATION_HEADERS, rows)
 
@@ -540,7 +544,8 @@ while True:
                         utils.display_data(utils.APPLICATION_HEADERS, rows)
 
                     elif choice == "5":
-                        status = utils.get_clean_string("Enter the status: ")
+                        # yes yes, ik we used get_calen_name for status so we have flexibility in search.
+                        status = utils.get_clean_name("Enter the status: ")
                         rows = queries.search_applications_by_status(status)
                         if rows:
                             utils.display_data(utils.APPLICATION_HEADERS, rows)
@@ -658,7 +663,7 @@ while True:
                             print("No records found")
 
                     elif choice == "2":
-                        company_name = utils.get_clean_string("Enter the company name: ")
+                        company_name = utils.get_corporate_string("Enter the company name: ")
                         rows = queries.search_students_applied_to_company(company_name)
                         if rows:
                             utils.display_data(['Student Name'], rows)
