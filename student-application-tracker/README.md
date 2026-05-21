@@ -10,7 +10,6 @@ This project is built following a structured, long-term engineering blueprint to
 
 This system is designed to grow in architectural depth over time rather than remaining a static codebase. 
 
-📖 **[Click here to view the complete, detailed Project Blueprint PDF](./docs/Roadmap.pdf)**
 
 ### 📍 Phase Timeline Summary:
 * **Phase 1: Relational Foundation & CLI Engine** (Current Milestone Met)
