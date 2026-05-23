@@ -1,23 +1,41 @@
 import logging
 import os
 
-# 1. Dynamically locate the absolute path of the project root folder
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_DIR = os.path.join(BASE_DIR, 'logs')
 
-# 2. Guarantee the logs directory is created safely internally
-os.makedirs(LOG_DIR, exist_ok=True)
+# Project root = folder where logger_config.py exists
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
-# 3. Target the absolute file path for app.log
-log_file_path = os.path.join(LOG_DIR, 'app.log')
+# Create logs folder inside project
+LOG_DIR = os.path.join(
+    BASE_DIR,
+    "logs"
+)
 
-# 4. Standard basic configuration parameters
+os.makedirs(
+    LOG_DIR,
+    exist_ok=True
+)
+
+# Final log file
+log_file_path = os.path.join(
+    LOG_DIR,
+    "app.log"
+)
+
+# Configure logging
 logging.basicConfig(
     filename=log_file_path,
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# 5. Create the global platform logger instance
-logger = logging.getLogger('GlobalTransit')
-logger.info("GlobalTransit Platform Logging System Initialized Natively.")
+# Global logger
+logger = logging.getLogger(
+    "GermanyPreparation"
+)
+
+logger.info(
+    "Germany Preparation Logging System Initialized."
+)
