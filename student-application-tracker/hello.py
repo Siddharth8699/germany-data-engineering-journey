@@ -1,1 +1,0 @@
-print("Germany preparation journey started")
